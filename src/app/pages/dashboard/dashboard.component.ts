@@ -100,8 +100,15 @@ export class DashboardComponent implements OnInit {
     this.timeseriesLoading = true;
     this.timeseriesError = '';
 
+    const range = this.energyService.getPeriodRange(this.selectedPeriod);
+
+    this.chartFrom = range.from;
+    this.chartTo = range.to;
+    this.chartLines = [];
+    this.hasTimeseriesData = false;
+
     this.energyService
-      .getTimeseries(undefined, undefined, this.selectedPeriod)
+      .getTimeseries(range.from, range.to, this.selectedPeriod)
       .pipe(finalize(() => (this.timeseriesLoading = false)))
       .subscribe({
         next: (response) => {
