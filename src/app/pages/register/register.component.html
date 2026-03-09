@@ -1,0 +1,32 @@
+<section class="auth-card">
+  <h1>Registrieren</h1>
+
+  <form [formGroup]="registerForm" (ngSubmit)="submit()">
+    <label for="name">Name</label>
+    <input id="name" type="text" formControlName="name" />
+    <small *ngIf="registerForm.controls.name.touched && registerForm.controls.name.invalid">
+      Name ist erforderlich.
+    </small>
+
+    <label for="email">E-Mail</label>
+    <input id="email" type="email" formControlName="email" />
+    <small *ngIf="registerForm.controls.email.touched && registerForm.controls.email.invalid">
+      Bitte eine gültige E-Mail eingeben.
+    </small>
+
+    <label for="password">Passwort</label>
+    <input id="password" type="password" formControlName="password" />
+    <small *ngIf="registerForm.controls.password.touched && registerForm.controls.password.invalid">
+      Passwort ist erforderlich.
+    </small>
+
+    <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <button type="submit" [disabled]="isLoading">
+      {{ isLoading ? 'Registrieren...' : 'Registrieren' }}
+    </button>
+  </form>
+
+  <a routerLink="/login">Schon ein Konto? Anmelden</a>
+</section>
