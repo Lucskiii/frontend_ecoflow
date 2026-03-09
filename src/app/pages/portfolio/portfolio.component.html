@@ -1,0 +1,87 @@
+<section class="portfolio">
+  <header class="portfolio-header">
+    <div>
+      <h1>Portfolio</h1>
+      <p>Aggregierte Einspeisung aller Customers</p>
+    </div>
+    <a class="back-link" routerLink="/dashboard">Zum Dashboard</a>
+  </header>
+
+  <div class="period-selector">
+    <button
+      type="button"
+      *ngFor="let option of periodOptions"
+      [class.active]="selectedPeriod === option.value"
+      (click)="onPeriodChange(option.value)"
+    >
+      {{ option.label }}
+    </button>
+  </div>
+
+  <div *ngIf="summaryLoading" class="state-message">Kennzahlen werden geladen ...</div>
+  <div *ngIf="summaryError" class="state-message error">{{ summaryError }}</div>
+
+  <div class="cards" *ngIf="!summaryLoading && summary">
+    <article class="card">
+      <p>Gesamte Einspeisung</p>
+      <strong>{{ summary.total_grid_export_kwh | number: '1.1-2' }} kWh</strong>
+    </article>
+    <article class="card">
+      <p>Vermarktbare Einspeisung</p>
+      <strong>{{ summary.tradable_export_kwh | number: '1.1-2' }} kWh</strong>
+    </article>
+    <article class="card">
+      <p>Customers</p>
+      <strong>{{ summary.customer_count }}</strong>
+    </article>
+    <article class="card">
+      <p>Sites</p>
+      <strong>{{ summary.site_count }}</strong>
+    </article>
+    <article class="card">
+      <p>Sicherheitsfaktor</p>
+      <strong>{{ summary.safety_factor | number: '1.2-2' }}</strong>
+    </article>
+  </div>
+
+  <p class="hint" *ngIf="summary">Vermarktbare Energie = aggregierte Einspeisung × Sicherheitsfaktor</p>
+
+  <section class="chart-wrap">
+    <h2>Portfolio Zeitreihe</h2>
+    <div *ngIf="timeseriesLoading" class="state-message">Zeitreihe wird geladen ...</div>
+    <div *ngIf="timeseriesError" class="state-message error">{{ timeseriesError }}</div>
+    <div *ngIf="!timeseriesLoading && !timeseriesError && !hasTimeseriesData" class="state-message">
+      Für den gewählten Zeitraum liegen keine Portfolio-Daten vor.
+    </div>
+
+    <div *ngIf="!timeseriesLoading && hasTimeseriesData" class="chart-container">
+      <svg viewBox="0 0 760 280" role="img" aria-label="Portfolio-Zeitreihe">
+        <line x1="0" y1="279" x2="760" y2="279" class="axis"></line>
+        <line x1="1" y1="0" x2="1" y2="280" class="axis"></line>
+
+        <path
+          *ngFor="let line of chartLines"
+          [attr.d]="line.path"
+          [attr.stroke]="line.color"
+          fill="none"
+          stroke-width="2"
+          stroke-linejoin="round"
+          stroke-linecap="round"
+          [attr.opacity]="line.hasData ? 1 : 0"
+        ></path>
+      </svg>
+
+      <div class="x-axis-labels">
+        <span>{{ chartFrom | date: 'short' }}</span>
+        <span>{{ chartTo | date: 'short' }}</span>
+      </div>
+
+      <ul class="legend">
+        <li *ngFor="let line of chartLines" [class.muted]="!line.hasData">
+          <span class="dot" [style.background]="line.color"></span>
+          {{ line.label }}
+        </li>
+      </ul>
+    </div>
+  </section>
+</section>
