@@ -1,10 +1,12 @@
 <section class="dashboard">
   <header>
-    <h1>Dashboard</h1>
+    <h1>{{ customer?.name ? 'Willkommen ' + customer?.name : 'Willkommen zurück' }}</h1>
     <button type="button" (click)="logout()">Logout</button>
   </header>
 
-  <p>Willkommen im Dashboard. Hier können später deine Inhalte angezeigt werden.</p>
+  <p>Schön, dass du wieder da bist. Verwalte hier schnell deine persönlichen Einstellungen.</p>
+
+  <a class="profile-link" routerLink="/profile">Zum Profil</a>
 
   <div class="cards">
     <article class="card">Platzhalter 1</article>

@@ -1,0 +1,21 @@
+<section class="profile">
+  <h1>Profil</h1>
+  <p>Hier kannst du deine Profildaten einsehen und aktualisieren.</p>
+
+  <form [formGroup]="profileForm" (ngSubmit)="save()">
+    <label for="name">Name</label>
+    <input id="name" type="text" formControlName="name" />
+
+    <label for="email">E-Mail</label>
+    <input id="email" type="email" formControlName="email" />
+
+    <div class="actions">
+      <button type="submit" [disabled]="isSaving || isLoading">{{ isSaving ? 'Speichert...' : 'Speichern' }}</button>
+      <button type="button" (click)="reset()" [disabled]="isSaving || isLoading">Abbrechen</button>
+      <a routerLink="/dashboard">Zurück zum Dashboard</a>
+    </div>
+
+    <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  </form>
+</section>
