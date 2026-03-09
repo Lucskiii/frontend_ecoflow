@@ -1,4 +1,4 @@
-export type EnergyPeriod = 'today' | 'last_7_days' | 'last_30_days';
+export type EnergyPeriod = 'today' | '7d' | '30d';
 
 export interface EnergySummary {
   period: string;

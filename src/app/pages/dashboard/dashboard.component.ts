@@ -29,8 +29,8 @@ export class DashboardComponent implements OnInit {
   protected selectedPeriod: EnergyPeriod = 'today';
   protected readonly periodOptions: { label: string; value: EnergyPeriod }[] = [
     { label: 'Heute', value: 'today' },
-    { label: 'Letzte 7 Tage', value: 'last_7_days' },
-    { label: 'Letzte 30 Tage', value: 'last_30_days' }
+    { label: 'Letzte 7 Tage', value: '7d' },
+    { label: 'Letzte 30 Tage', value: '30d' }
   ];
 
   protected summary: EnergySummary | null = null;
