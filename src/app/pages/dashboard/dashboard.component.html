@@ -8,9 +8,84 @@
 
   <a class="profile-link" routerLink="/profile">Zum Profil</a>
 
-  <div class="cards">
-    <article class="card">Platzhalter 1</article>
-    <article class="card">Platzhalter 2</article>
-    <article class="card">Platzhalter 3</article>
-  </div>
+  <section class="energy-section">
+    <div class="energy-header">
+      <h2>Simulierte Energiedaten</h2>
+      <div class="period-selector">
+        <button
+          type="button"
+          *ngFor="let option of periodOptions"
+          [class.active]="selectedPeriod === option.value"
+          (click)="onPeriodChange(option.value)"
+        >
+          {{ option.label }}
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="summaryLoading" class="state-message">Kennzahlen werden geladen ...</div>
+    <div *ngIf="summaryError" class="state-message error">{{ summaryError }}</div>
+
+    <div class="cards" *ngIf="!summaryLoading && summary">
+      <article class="card">
+        <p>Verbrauch</p>
+        <strong>{{ summary.load_kwh | number: '1.1-2' }} kWh</strong>
+      </article>
+      <article class="card">
+        <p>Netzbezug</p>
+        <strong>{{ summary.grid_import_kwh | number: '1.1-2' }} kWh</strong>
+      </article>
+      <article class="card">
+        <p>Einspeisung</p>
+        <strong>{{ summary.grid_export_kwh | number: '1.1-2' }} kWh</strong>
+      </article>
+      <article class="card">
+        <p>PV-Erzeugung</p>
+        <strong>{{ summary.pv_generation_kwh | number: '1.1-2' }} kWh</strong>
+      </article>
+      <article class="card" *ngIf="summary.self_consumption_ratio !== undefined">
+        <p>Eigenverbrauchsanteil</p>
+        <strong>{{ summary.self_consumption_ratio * 100 | number: '1.0-1' }} %</strong>
+      </article>
+    </div>
+
+    <div class="chart-wrap">
+      <h3>Verlauf</h3>
+      <div *ngIf="timeseriesLoading" class="state-message">Zeitreihe wird geladen ...</div>
+      <div *ngIf="timeseriesError" class="state-message error">{{ timeseriesError }}</div>
+      <div *ngIf="!timeseriesLoading && !timeseriesError && !hasTimeseriesData" class="state-message">
+        Für den gewählten Zeitraum liegen keine Zeitreihendaten vor.
+      </div>
+
+      <div *ngIf="!timeseriesLoading && hasTimeseriesData" class="chart-container">
+        <svg viewBox="0 0 760 280" role="img" aria-label="Energie-Zeitreihe">
+          <line x1="0" y1="279" x2="760" y2="279" class="axis"></line>
+          <line x1="1" y1="0" x2="1" y2="280" class="axis"></line>
+
+          <path
+            *ngFor="let line of chartLines"
+            [attr.d]="line.path"
+            [attr.stroke]="line.color"
+            fill="none"
+            stroke-width="2"
+            stroke-linejoin="round"
+            stroke-linecap="round"
+            [attr.opacity]="line.hasData ? 1 : 0"
+          ></path>
+        </svg>
+
+        <div class="x-axis-labels">
+          <span>{{ chartFrom | date: 'short' }}</span>
+          <span>{{ chartTo | date: 'short' }}</span>
+        </div>
+
+        <ul class="legend">
+          <li *ngFor="let line of chartLines" [class.muted]="!line.hasData">
+            <span class="dot" [style.background]="line.color"></span>
+            {{ line.label }}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
 </section>
