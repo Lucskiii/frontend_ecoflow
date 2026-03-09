@@ -19,6 +19,13 @@ button {
   margin-top: 0.5rem;
 }
 
+.quick-links {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .energy-section {
   margin-top: 1.25rem;
   background: #fff;

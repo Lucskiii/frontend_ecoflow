@@ -1,0 +1,145 @@
+.portfolio {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.portfolio-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+
+  h1 {
+    margin: 0;
+  }
+
+  p {
+    margin: 0.4rem 0 0;
+    color: #667085;
+  }
+}
+
+.back-link {
+  color: #475467;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.period-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+
+  button {
+    border: 1px solid #d0d5dd;
+    border-radius: 999px;
+    background: #fff;
+    padding: 0.4rem 0.9rem;
+    cursor: pointer;
+  }
+
+  button.active {
+    background: #111827;
+    color: #fff;
+    border-color: #111827;
+  }
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.card {
+  border: 1px solid #e4e7ec;
+  border-radius: 0.75rem;
+  padding: 0.9rem;
+  background: #fff;
+
+  p {
+    margin: 0;
+    color: #667085;
+    font-size: 0.9rem;
+  }
+
+  strong {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 1.15rem;
+  }
+}
+
+.hint {
+  margin: 1rem 0 0;
+  color: #667085;
+  font-size: 0.9rem;
+}
+
+.chart-wrap {
+  margin-top: 1.8rem;
+  border: 1px solid #e4e7ec;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background: #fff;
+}
+
+.chart-container {
+  margin-top: 0.8rem;
+
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+.axis {
+  stroke: #d0d5dd;
+  stroke-width: 1;
+}
+
+.x-axis-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  color: #667085;
+  font-size: 0.82rem;
+}
+
+.legend {
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+  }
+
+  .dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+  }
+
+  .muted {
+    opacity: 0.45;
+  }
+}
+
+.state-message {
+  margin-top: 0.6rem;
+  color: #475467;
+}
+
+.state-message.error {
+  color: #b42318;
+}
