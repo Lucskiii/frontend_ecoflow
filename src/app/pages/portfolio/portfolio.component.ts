@@ -3,6 +3,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { EnergyService } from '../../energy/energy.service';
+import { MarketPricePoint, MarketPriceResponse } from '../../market/market.models';
+import { MarketPriceService } from '../../market/market-price.service';
 import {
   PortfolioExportSummary,
   PortfolioExportTimeseriesResponse,
@@ -28,6 +30,7 @@ interface ChartLine {
 export class PortfolioComponent implements OnInit {
   private readonly portfolioService = inject(PortfolioService);
   private readonly energyService = inject(EnergyService);
+  private readonly marketPriceService = inject(MarketPriceService);
 
   protected selectedPeriod: PortfolioPeriod = 'today';
   protected readonly periodOptions: { label: string; value: PortfolioPeriod }[] = [
@@ -46,6 +49,20 @@ export class PortfolioComponent implements OnInit {
   protected hasTimeseriesData = false;
   protected chartFrom = '';
   protected chartTo = '';
+
+  protected priceLoading = true;
+  protected priceError = '';
+  protected pricePath = '';
+  protected hasPriceData = false;
+  protected priceFrom = '';
+  protected priceTo = '';
+  protected priceSource = '';
+  protected priceProduct = '';
+  protected priceUnit = '';
+  protected currentPrice: number | null = null;
+  protected minPrice: number | null = null;
+  protected maxPrice: number | null = null;
+  protected avgPrice: number | null = null;
 
   private readonly seriesConfig: Record<string, { label: string; color: string }> = {
     portfolio_grid_export: { label: 'Portfolio Grid Export', color: '#1f77b4' },
@@ -68,6 +85,7 @@ export class PortfolioComponent implements OnInit {
   private loadPortfolioData(): void {
     this.loadSummary();
     this.loadTimeseries();
+    this.loadPrices();
   }
 
   private loadSummary(): void {
@@ -116,6 +134,47 @@ export class PortfolioComponent implements OnInit {
       });
   }
 
+  private loadPrices(): void {
+    this.priceLoading = true;
+    this.priceError = '';
+
+    const range = this.energyService.getPeriodRange(this.selectedPeriod);
+    this.priceFrom = range.from;
+    this.priceTo = range.to;
+    this.hasPriceData = false;
+    this.pricePath = '';
+
+    this.marketPriceService
+      .getPrices(range.from, range.to)
+      .pipe(finalize(() => (this.priceLoading = false)))
+      .subscribe({
+        next: (response) => {
+          this.priceSource = response.source;
+          this.priceProduct = response.product;
+          this.priceUnit = response.unit;
+          this.priceFrom = response.from;
+          this.priceTo = response.to;
+
+          const points = [...response.points].sort(
+            (a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime()
+          );
+
+          this.hasPriceData = points.length > 0;
+          this.pricePath = this.createPricePath(response, points);
+          this.setPriceStats(points);
+        },
+        error: () => {
+          this.priceError = 'Die Strompreise konnten nicht geladen werden.';
+          this.hasPriceData = false;
+          this.pricePath = '';
+          this.currentPrice = null;
+          this.minPrice = null;
+          this.maxPrice = null;
+          this.avgPrice = null;
+        }
+      });
+  }
+
   private createChartLines(response: PortfolioExportTimeseriesResponse): ChartLine[] {
     const chartWidth = 760;
     const chartHeight = 280;
@@ -160,5 +219,47 @@ export class PortfolioComponent implements OnInit {
         return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
       })
       .join(' ');
+  }
+
+  private createPricePath(response: MarketPriceResponse, points: MarketPricePoint[]): string {
+    if (!points.length) {
+      return '';
+    }
+
+    const chartWidth = 760;
+    const chartHeight = 220;
+    const fromTs = new Date(response.from).getTime();
+    const toTs = new Date(response.to).getTime();
+    const timespan = Math.max(toTs - fromTs, 1);
+
+    const values = points.map((point) => point.price_eur_mwh);
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const valueRange = Math.max(maxValue - minValue, 1);
+
+    return points
+      .map((point, index) => {
+        const x = ((new Date(point.ts).getTime() - fromTs) / timespan) * chartWidth;
+        const y = chartHeight - ((point.price_eur_mwh - minValue) / valueRange) * chartHeight;
+
+        return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
+      })
+      .join(' ');
+  }
+
+  private setPriceStats(points: MarketPricePoint[]): void {
+    if (!points.length) {
+      this.currentPrice = null;
+      this.minPrice = null;
+      this.maxPrice = null;
+      this.avgPrice = null;
+      return;
+    }
+
+    const values = points.map((point) => point.price_eur_mwh);
+    this.currentPrice = values[values.length - 1] ?? null;
+    this.minPrice = Math.min(...values);
+    this.maxPrice = Math.max(...values);
+    this.avgPrice = values.reduce((sum, value) => sum + value, 0) / values.length;
   }
 }

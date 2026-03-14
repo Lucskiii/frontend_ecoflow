@@ -84,4 +84,62 @@
       </ul>
     </div>
   </section>
+
+  <section class="chart-wrap price-wrap">
+    <h2>Strompreise</h2>
+    <p class="subtitle">Marktpreise aus dem Backend</p>
+
+    <div *ngIf="priceLoading" class="state-message">Strompreise werden geladen ...</div>
+    <div *ngIf="priceError" class="state-message error">{{ priceError }}</div>
+    <div *ngIf="!priceLoading && !priceError && !hasPriceData" class="state-message">
+      Für den gewählten Zeitraum liegen keine Strompreise vor.
+    </div>
+
+    <div *ngIf="!priceLoading && hasPriceData" class="price-content">
+      <div class="cards compact-cards">
+        <article class="card">
+          <p>Aktueller Preis</p>
+          <strong>{{ currentPrice | number: '1.1-2' }} {{ priceUnit }}</strong>
+        </article>
+        <article class="card">
+          <p>Minimum</p>
+          <strong>{{ minPrice | number: '1.1-2' }} {{ priceUnit }}</strong>
+        </article>
+        <article class="card">
+          <p>Maximum</p>
+          <strong>{{ maxPrice | number: '1.1-2' }} {{ priceUnit }}</strong>
+        </article>
+        <article class="card">
+          <p>Durchschnitt</p>
+          <strong>{{ avgPrice | number: '1.1-2' }} {{ priceUnit }}</strong>
+        </article>
+      </div>
+
+      <div class="meta-row">
+        <span><strong>Quelle:</strong> {{ priceSource || '-' }}</span>
+        <span><strong>Produkt:</strong> {{ priceProduct || '-' }}</span>
+        <span><strong>Einheit:</strong> {{ priceUnit || '-' }}</span>
+      </div>
+
+      <div class="chart-container">
+        <svg viewBox="0 0 760 220" role="img" aria-label="Strompreis-Zeitreihe">
+          <line x1="0" y1="219" x2="760" y2="219" class="axis"></line>
+          <line x1="1" y1="0" x2="1" y2="220" class="axis"></line>
+          <path
+            [attr.d]="pricePath"
+            stroke="#f79009"
+            fill="none"
+            stroke-width="2"
+            stroke-linejoin="round"
+            stroke-linecap="round"
+          ></path>
+        </svg>
+
+        <div class="x-axis-labels">
+          <span>{{ priceFrom | date: 'short' }}</span>
+          <span>{{ priceTo | date: 'short' }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
 </section>
