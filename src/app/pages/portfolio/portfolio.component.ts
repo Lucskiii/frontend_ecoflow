@@ -64,6 +64,8 @@ export class PortfolioComponent implements OnInit {
   protected maxPrice: number | null = null;
   protected avgPrice: number | null = null;
 
+  private latestPriceRequestId = 0;
+
   private readonly seriesConfig: Record<string, { label: string; color: string }> = {
     portfolio_grid_export: { label: 'Portfolio Grid Export', color: '#1f77b4' },
     portfolio_tradable_export: { label: 'Tradable Export', color: '#2ca02c' }
@@ -135,6 +137,7 @@ export class PortfolioComponent implements OnInit {
   }
 
   private loadPrices(): void {
+    const requestId = ++this.latestPriceRequestId;
     this.priceLoading = true;
     this.priceError = '';
 
@@ -146,9 +149,19 @@ export class PortfolioComponent implements OnInit {
 
     this.marketPriceService
       .getPrices(range.from, range.to)
-      .pipe(finalize(() => (this.priceLoading = false)))
+      .pipe(
+        finalize(() => {
+          if (requestId === this.latestPriceRequestId) {
+            this.priceLoading = false;
+          }
+        })
+      )
       .subscribe({
         next: (response) => {
+          if (requestId !== this.latestPriceRequestId) {
+            return;
+          }
+
           this.priceSource = response.source;
           this.priceProduct = response.product;
           this.priceUnit = response.unit;
@@ -164,6 +177,10 @@ export class PortfolioComponent implements OnInit {
           this.setPriceStats(points);
         },
         error: () => {
+          if (requestId !== this.latestPriceRequestId) {
+            return;
+          }
+
           this.priceError = 'Die Strompreise konnten nicht geladen werden.';
           this.hasPriceData = false;
           this.pricePath = '';
