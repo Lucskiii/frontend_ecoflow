@@ -45,11 +45,11 @@ export class DashboardComponent implements OnInit {
 
   protected summary: EnergySummary | null = null;
 
-  private readonly seriesConfig: Record<string, { label: string; color: string }> = {
-    load: { label: 'Verbrauch', color: '#1f77b4' },
-    pv_generation: { label: 'PV-Erzeugung', color: '#2ca02c' },
-    grid_import: { label: 'Netzbezug', color: '#ff7f0e' },
-    grid_export: { label: 'Einspeisung', color: '#9467bd' }
+  private readonly seriesConfig: Record<string, { label: string; color: string; getValue: (item: DailyConsumptionItem) => number | undefined }> = {
+    load: { label: 'Verbrauch', color: '#1f77b4', getValue: (item) => item.consumption_kwh },
+    pv_generation: { label: 'PV-Erzeugung', color: '#2ca02c', getValue: (item) => item.pv_generation_kwh },
+    grid_import: { label: 'Netzbezug', color: '#ff7f0e', getValue: (item) => item.grid_import_kwh },
+    grid_export: { label: 'Einspeisung', color: '#9467bd', getValue: (item) => item.grid_export_kwh }
   };
 
   ngOnInit(): void {
@@ -74,32 +74,16 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadEnergyData(): void {
-    this.loadSummary();
     this.loadTimeseries();
-  }
-
-  private loadSummary(): void {
-    this.summaryLoading = true;
-    this.summaryError = '';
-
-    this.energyService
-      .getSummary(this.selectedPeriod)
-      .pipe(finalize(() => (this.summaryLoading = false)))
-      .subscribe({
-        next: (summary) => {
-          this.summary = summary;
-        },
-        error: () => {
-          this.summary = null;
-          this.summaryError = 'Die Kennzahlen konnten nicht geladen werden.';
-        }
-      });
   }
 
   private loadTimeseries(): void {
     const customerId = this.customer?.id;
 
     if (!customerId) {
+      this.summaryLoading = false;
+      this.summaryError = 'Kein Kunde ausgewählt.';
+      this.summary = null;
       this.timeseriesLoading = false;
       this.timeseriesError = 'Kein Kunde ausgewählt.';
       this.chartLines = [];
@@ -107,6 +91,8 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
+    this.summaryLoading = true;
+    this.summaryError = '';
     this.timeseriesLoading = true;
     this.timeseriesError = '';
 
@@ -122,18 +108,30 @@ export class DashboardComponent implements OnInit {
         start_date: this.toDateParam(range.from),
         end_date: this.toDateParam(range.to)
       })
-      .pipe(finalize(() => (this.timeseriesLoading = false)))
+      .pipe(
+        finalize(() => {
+          this.summaryLoading = false;
+          this.timeseriesLoading = false;
+        })
+      )
       .subscribe({
         next: (items) => {
-          this.chartLines = this.createChartLines(items);
-          this.hasTimeseriesData = this.chartLines.some((line) => line.hasData);
+          const sortedItems = [...items].sort(
+            (a, b) => new Date(`${a.consumption_date}T00:00:00Z`).getTime() - new Date(`${b.consumption_date}T00:00:00Z`).getTime()
+          );
 
-          if (items.length) {
-            this.chartFrom = new Date(`${items[0].consumption_date}T00:00:00Z`).toISOString();
-            this.chartTo = new Date(`${items[items.length - 1].consumption_date}T00:00:00Z`).toISOString();
+          this.chartLines = this.createChartLines(sortedItems);
+          this.hasTimeseriesData = this.chartLines.some((line) => line.hasData);
+          this.summary = this.createSummary(sortedItems);
+
+          if (sortedItems.length) {
+            this.chartFrom = new Date(`${sortedItems[0].consumption_date}T00:00:00Z`).toISOString();
+            this.chartTo = new Date(`${sortedItems[sortedItems.length - 1].consumption_date}T00:00:00Z`).toISOString();
           }
         },
         error: () => {
+          this.summary = null;
+          this.summaryError = 'Die Kennzahlen konnten nicht geladen werden.';
           this.chartLines = [];
           this.hasTimeseriesData = false;
           this.timeseriesError = 'Die Zeitreihe konnte nicht geladen werden.';
@@ -141,20 +139,48 @@ export class DashboardComponent implements OnInit {
       });
   }
 
+  private createSummary(items: DailyConsumptionItem[]): EnergySummary {
+    const total = (values: number[]) => values.reduce((sum, value) => sum + value, 0);
+    const selfConsumptionValues = items
+      .map((item) => item.self_consumption_share_pct)
+      .filter((value): value is number => typeof value === 'number');
+
+    return {
+      period: this.selectedPeriod,
+      load_kwh: total(items.map((item) => item.consumption_kwh ?? 0)),
+      grid_import_kwh: total(items.map((item) => item.grid_import_kwh ?? 0)),
+      grid_export_kwh: total(items.map((item) => item.grid_export_kwh ?? 0)),
+      pv_generation_kwh: total(items.map((item) => item.pv_generation_kwh ?? 0)),
+      self_consumption_share_pct: selfConsumptionValues.length
+        ? total(selfConsumptionValues) / selfConsumptionValues.length
+        : undefined
+    };
+  }
+
   private createChartLines(items: DailyConsumptionItem[]): ChartLine[] {
     const chartWidth = 760;
     const chartHeight = 280;
-    const points = items
-      .map((item) => ({ ts: `${item.consumption_date}T00:00:00Z`, value: item.consumption_kwh }))
-      .sort((a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime());
+    const allPoints = Object.entries(this.seriesConfig).flatMap(([key, config]) =>
+      items
+        .map((item) => {
+          const value = config.getValue(item);
+          return {
+            key,
+            ts: `${item.consumption_date}T00:00:00Z`,
+            value: typeof value === 'number' ? value : undefined
+          };
+        })
+        .filter((point): point is { key: string; ts: string; value: number } => typeof point.value === 'number')
+    );
 
-    const fromTs = points.length ? new Date(points[0].ts).getTime() : Date.now();
-    const toTs = points.length ? new Date(points[points.length - 1].ts).getTime() : fromTs;
+    const fromTs = allPoints.length ? new Date(allPoints[0].ts).getTime() : Date.now();
+    const toTs = allPoints.length ? new Date(allPoints[allPoints.length - 1].ts).getTime() : fromTs;
     const timespan = Math.max(toTs - fromTs, 1);
-    const maxValue = Math.max(...points.map((point) => point.value), 0.1);
+    const maxValue = Math.max(...allPoints.map((point) => point.value), 0.1);
 
     return Object.keys(this.seriesConfig).map((key) => {
-      const hasData = key === 'load' && points.length > 0;
+      const points = allPoints.filter((point) => point.key === key);
+      const hasData = points.length > 0;
       const path = hasData ? this.createPath(points, fromTs, timespan, maxValue, chartWidth, chartHeight) : '';
 
       return {

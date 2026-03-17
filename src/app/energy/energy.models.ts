@@ -6,7 +6,7 @@ export interface EnergySummary {
   grid_export_kwh: number;
   load_kwh: number;
   pv_generation_kwh: number;
-  self_consumption_ratio?: number;
+  self_consumption_share_pct?: number;
 }
 
 export interface EnergyPoint {
@@ -30,7 +30,11 @@ export interface EnergyTimeseriesResponse {
 export interface DailyConsumptionItem {
   consumption_date: string;
   consumption_kwh: number;
-  source_type: string;
+  grid_import_kwh?: number;
+  grid_export_kwh?: number;
+  pv_generation_kwh?: number;
+  self_consumption_share_pct?: number;
+  source_type?: string;
 }
 
 export interface DailyConsumptionParams {
