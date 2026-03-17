@@ -46,9 +46,9 @@
         <p>PV-Erzeugung</p>
         <strong>{{ summary.pv_generation_kwh | number: '1.1-2' }} kWh</strong>
       </article>
-      <article class="card" *ngIf="summary.self_consumption_ratio !== undefined">
+      <article class="card" *ngIf="summary.self_consumption_share_pct !== undefined">
         <p>Eigenverbrauchsanteil</p>
-        <strong>{{ summary.self_consumption_ratio * 100 | number: '1.0-1' }} %</strong>
+        <strong>{{ summary.self_consumption_share_pct | number: '1.0-1' }} %</strong>
       </article>
     </div>
 
