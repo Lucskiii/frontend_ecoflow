@@ -1,12 +1,19 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { EnergyPeriod, EnergySummary, EnergyTimeseriesResponse } from './energy.models';
+import {
+  DailyConsumptionItem,
+  DailyConsumptionParams,
+  EnergyPeriod,
+  EnergySummary,
+  EnergyTimeseriesResponse
+} from './energy.models';
 
 @Injectable({ providedIn: 'root' })
 export class EnergyService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = 'http://localhost:8000/api/customers/me/energy';
+  private readonly customerBaseUrl = 'http://localhost:8000/api/customers';
 
   getSummary(period?: EnergyPeriod): Observable<EnergySummary> {
     const params = this.addPeriodParam(new HttpParams(), period);
@@ -32,6 +39,28 @@ export class EnergyService {
     }
 
     return this.http.get<EnergyTimeseriesResponse>(`${this.baseUrl}/timeseries`, { params });
+  }
+
+  getCustomerDailyConsumption(
+    customerId: string,
+    params?: DailyConsumptionParams
+  ): Observable<DailyConsumptionItem[]> {
+    let requestParams = new HttpParams();
+
+    if (params?.start_date) {
+      requestParams = requestParams.set('start_date', params.start_date);
+    }
+
+    if (params?.end_date) {
+      requestParams = requestParams.set('end_date', params.end_date);
+    }
+
+    requestParams = requestParams.set('auto_generate', String(params?.auto_generate ?? true));
+
+    return this.http.get<DailyConsumptionItem[]>(
+      `${this.customerBaseUrl}/${customerId}/consumption/daily`,
+      { params: requestParams }
+    );
   }
 
   private addPeriodParam(params: HttpParams, period?: EnergyPeriod): HttpParams {

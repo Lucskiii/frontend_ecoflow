@@ -8,11 +8,15 @@ interface AuthResponse {
 }
 
 export interface CustomerProfile {
+  id?: string;
   name: string;
   email: string;
 }
 
 interface JwtPayload {
+  sub?: string;
+  customer_id?: string;
+  id?: string;
   name?: string;
   email?: string;
   [key: string]: unknown;
@@ -83,8 +87,8 @@ export class AuthService {
         headers: new HttpHeaders({ Authorization: `Bearer ${token}` })
       })
       .pipe(
+        map((customer) => ({ ...customerFromToken, ...customer } as CustomerProfile)),
         tap((customer) => this.currentCustomerSubject.next(customer)),
-        map((customer) => customer ?? customerFromToken),
         catchError(() => {
           this.currentCustomerSubject.next(customerFromToken);
           return of(customerFromToken);
@@ -106,7 +110,10 @@ export class AuthService {
       return null;
     }
 
+    const payloadId = payload.customer_id ?? payload.sub ?? payload.id;
+
     return {
+      id: typeof payloadId === 'string' ? payloadId : undefined,
       name: name || email,
       email
     };
