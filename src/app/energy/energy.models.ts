@@ -26,3 +26,15 @@ export interface EnergyTimeseriesResponse {
   to: string;
   series: EnergySeries[];
 }
+
+export interface DailyConsumptionItem {
+  consumption_date: string;
+  consumption_kwh: number;
+  source_type: string;
+}
+
+export interface DailyConsumptionParams {
+  start_date?: string;
+  end_date?: string;
+  auto_generate?: boolean;
+}
