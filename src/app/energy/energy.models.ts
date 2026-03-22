@@ -16,7 +16,7 @@ export interface EnergySummary {
 
 export interface EnergyPoint {
   ts: string;
-  value: number;
+  value: number | string;
 }
 
 export interface EnergySeries {

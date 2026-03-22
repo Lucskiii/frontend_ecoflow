@@ -121,7 +121,7 @@ export class DashboardComponent implements OnInit {
 
   private createSummary(response: EnergyTimeseriesResponse): EnergySummary {
     const totals = response.series.reduce<Record<string, number>>((acc, series) => {
-      acc[series.meter_type] = series.points.reduce((sum, point) => sum + point.value, 0);
+      acc[series.meter_type] = series.points.reduce((sum, point) => sum + this.toNumericValue(point.value), 0);
       return acc;
     }, {});
 
@@ -144,7 +144,9 @@ export class DashboardComponent implements OnInit {
     const fromTs = new Date(response.from).getTime();
     const toTs = new Date(response.to).getTime();
     const timespan = Math.max(toTs - fromTs, 1);
-    const allValues = response.series.flatMap((series) => series.points.map((point) => point.value));
+    const allValues = response.series.flatMap((series) =>
+      series.points.map((point) => this.toNumericValue(point.value)).filter((value) => value > 0)
+    );
     const maxValue = Math.max(...allValues, 0.1);
 
     return Object.entries(this.seriesConfig).map(([key, config]) => {
@@ -176,10 +178,17 @@ export class DashboardComponent implements OnInit {
     return series.points
       .map((point, index) => {
         const x = ((new Date(point.ts).getTime() - fromTs) / timespan) * chartWidth;
-        const y = chartHeight - (point.value / maxValue) * chartHeight;
+        const value = this.toNumericValue(point.value);
+        const y = chartHeight - (value / maxValue) * chartHeight;
 
         return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
       })
       .join(' ');
+  }
+
+  private toNumericValue(value: number | string): number {
+    const numericValue = typeof value === 'number' ? value : Number.parseFloat(value);
+
+    return Number.isFinite(numericValue) ? numericValue : 0;
   }
 }
