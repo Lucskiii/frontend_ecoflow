@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, map, of, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, of, switchMap, tap } from 'rxjs';
+import { EnergyService } from '../energy/energy.service';
 
 interface AuthResponse {
   token?: string;
@@ -25,6 +26,7 @@ interface JwtPayload {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly energyService = inject(EnergyService);
   private readonly tokenStorageKey = 'auth_token';
   private readonly currentCustomerSubject = new BehaviorSubject<CustomerProfile | null>(null);
 
@@ -35,7 +37,13 @@ export class AuthService {
       .post<AuthResponse>('http://localhost:8000/api/auth/login', { email, password })
       .pipe(
         tap((response) => this.storeTokenFromResponse(response)),
-        tap(() => this.loadCurrentCustomer().subscribe())
+        switchMap((response) =>
+          this.energyService.simulate().pipe(
+            catchError(() => of(null)),
+            switchMap(() => this.loadCurrentCustomer()),
+            map(() => response)
+          )
+        )
       );
   }
 
