@@ -15,6 +15,10 @@ export class EnergyService {
   private readonly baseUrl = 'http://localhost:8000/api/customers/me/energy';
   private readonly customerBaseUrl = 'http://localhost:8000/api/customers';
 
+  simulate(): Observable<unknown> {
+    return this.http.post(`${this.baseUrl}/simulate`, {});
+  }
+
   getSummary(period?: EnergyPeriod): Observable<EnergySummary> {
     const params = this.addPeriodParam(new HttpParams(), period);
 
