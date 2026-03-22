@@ -86,12 +86,9 @@ export class DashboardComponent implements OnInit {
     this.hasTimeseriesData = false;
     this.summary = null;
 
-    const queryParams = this.selectedPeriod === 'today' ? undefined : this.energyService.getPeriodRange(this.selectedPeriod);
-
-    if (queryParams) {
-      this.chartFrom = queryParams.from;
-      this.chartTo = queryParams.to;
-    }
+    const queryParams = this.energyService.getPeriodRange(this.selectedPeriod);
+    this.chartFrom = queryParams.from;
+    this.chartTo = queryParams.to;
 
     this.energyService
       .getTimeseries(queryParams)
