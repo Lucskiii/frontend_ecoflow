@@ -3,7 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService, CustomerProfile } from '../../auth/auth.service';
-import { DailyConsumptionItem, EnergyPeriod, EnergySummary } from '../../energy/energy.models';
+import { EnergyPeriod, EnergySeries, EnergySummary, EnergyTimeseriesResponse } from '../../energy/energy.models';
 import { EnergyService } from '../../energy/energy.service';
 
 interface ChartLine {
@@ -45,11 +45,11 @@ export class DashboardComponent implements OnInit {
 
   protected summary: EnergySummary | null = null;
 
-  private readonly seriesConfig: Record<string, { label: string; color: string; getValue: (item: DailyConsumptionItem) => number | undefined }> = {
-    load: { label: 'Verbrauch', color: '#1f77b4', getValue: (item) => item.consumption_kwh },
-    pv_generation: { label: 'PV-Erzeugung', color: '#2ca02c', getValue: (item) => item.pv_generation_kwh },
-    grid_import: { label: 'Netzbezug', color: '#ff7f0e', getValue: (item) => item.grid_import_kwh },
-    grid_export: { label: 'Einspeisung', color: '#9467bd', getValue: (item) => item.grid_export_kwh }
+  private readonly seriesConfig: Record<string, { label: string; color: string }> = {
+    load: { label: 'Verbrauch', color: '#1f77b4' },
+    pv_generation: { label: 'PV-Erzeugung', color: '#2ca02c' },
+    grid_import: { label: 'Netzbezug', color: '#ff7f0e' },
+    grid_export: { label: 'Einspeisung', color: '#9467bd' }
   };
 
   ngOnInit(): void {
@@ -78,36 +78,23 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadTimeseries(): void {
-    const customerId = this.customer?.id;
-
-    if (!customerId) {
-      this.summaryLoading = false;
-      this.summaryError = 'Kein Kunde ausgewählt.';
-      this.summary = null;
-      this.timeseriesLoading = false;
-      this.timeseriesError = 'Kein Kunde ausgewählt.';
-      this.chartLines = [];
-      this.hasTimeseriesData = false;
-      return;
-    }
-
     this.summaryLoading = true;
     this.summaryError = '';
     this.timeseriesLoading = true;
     this.timeseriesError = '';
-
-    const range = this.energyService.getPeriodRange(this.selectedPeriod);
-
-    this.chartFrom = range.from;
-    this.chartTo = range.to;
     this.chartLines = [];
     this.hasTimeseriesData = false;
+    this.summary = null;
+
+    const queryParams = this.selectedPeriod === 'today' ? undefined : this.energyService.getPeriodRange(this.selectedPeriod);
+
+    if (queryParams) {
+      this.chartFrom = queryParams.from;
+      this.chartTo = queryParams.to;
+    }
 
     this.energyService
-      .getCustomerDailyConsumption(customerId, {
-        start_date: this.toDateParam(range.from),
-        end_date: this.toDateParam(range.to)
-      })
+      .getTimeseries(queryParams)
       .pipe(
         finalize(() => {
           this.summaryLoading = false;
@@ -115,19 +102,12 @@ export class DashboardComponent implements OnInit {
         })
       )
       .subscribe({
-        next: (items) => {
-          const sortedItems = [...items].sort(
-            (a, b) => new Date(`${a.consumption_date}T00:00:00Z`).getTime() - new Date(`${b.consumption_date}T00:00:00Z`).getTime()
-          );
-
-          this.chartLines = this.createChartLines(sortedItems);
+        next: (response) => {
+          this.chartFrom = response.from;
+          this.chartTo = response.to;
+          this.chartLines = this.createChartLines(response);
           this.hasTimeseriesData = this.chartLines.some((line) => line.hasData);
-          this.summary = this.createSummary(sortedItems);
-
-          if (sortedItems.length) {
-            this.chartFrom = new Date(`${sortedItems[0].consumption_date}T00:00:00Z`).toISOString();
-            this.chartTo = new Date(`${sortedItems[sortedItems.length - 1].consumption_date}T00:00:00Z`).toISOString();
-          }
+          this.summary = this.createSummary(response);
         },
         error: () => {
           this.summary = null;
@@ -139,83 +119,76 @@ export class DashboardComponent implements OnInit {
       });
   }
 
-  private createSummary(items: DailyConsumptionItem[]): EnergySummary {
-    const total = (values: number[]) => values.reduce((sum, value) => sum + value, 0);
-    const selfConsumptionValues = items
-      .map((item) => item.self_consumption_share_pct)
-      .filter((value): value is number => typeof value === 'number');
+  private createSummary(response: EnergyTimeseriesResponse): EnergySummary {
+    const totals = response.series.reduce<Record<string, number>>((acc, series) => {
+      acc[series.meter_type] = series.points.reduce((sum, point) => sum + this.toNumericValue(point.value), 0);
+      return acc;
+    }, {});
+
+    const pvGeneration = totals['pv_generation'] ?? 0;
+    const selfConsumption = Math.max(pvGeneration - (totals['grid_export'] ?? 0), 0);
 
     return {
       period: this.selectedPeriod,
-      load_kwh: total(items.map((item) => item.consumption_kwh ?? 0)),
-      grid_import_kwh: total(items.map((item) => item.grid_import_kwh ?? 0)),
-      grid_export_kwh: total(items.map((item) => item.grid_export_kwh ?? 0)),
-      pv_generation_kwh: total(items.map((item) => item.pv_generation_kwh ?? 0)),
-      self_consumption_share_pct: selfConsumptionValues.length
-        ? total(selfConsumptionValues) / selfConsumptionValues.length
-        : undefined
+      load_kwh: totals['load'] ?? 0,
+      grid_import_kwh: totals['grid_import'] ?? 0,
+      grid_export_kwh: totals['grid_export'] ?? 0,
+      pv_generation_kwh: pvGeneration,
+      self_consumption_share_pct: pvGeneration > 0 ? (selfConsumption / pvGeneration) * 100 : undefined
     };
   }
 
-  private createChartLines(items: DailyConsumptionItem[]): ChartLine[] {
+  private createChartLines(response: EnergyTimeseriesResponse): ChartLine[] {
     const chartWidth = 760;
     const chartHeight = 280;
-    const allPoints = Object.entries(this.seriesConfig).flatMap(([key, config]) =>
-      items
-        .map((item) => {
-          const value = config.getValue(item);
-          return {
-            key,
-            ts: `${item.consumption_date}T00:00:00Z`,
-            value: typeof value === 'number' ? value : undefined
-          };
-        })
-        .filter((point): point is { key: string; ts: string; value: number } => typeof point.value === 'number')
-    );
-
-    const fromTs = allPoints.length ? new Date(allPoints[0].ts).getTime() : Date.now();
-    const toTs = allPoints.length ? new Date(allPoints[allPoints.length - 1].ts).getTime() : fromTs;
+    const fromTs = new Date(response.from).getTime();
+    const toTs = new Date(response.to).getTime();
     const timespan = Math.max(toTs - fromTs, 1);
-    const maxValue = Math.max(...allPoints.map((point) => point.value), 0.1);
+    const allValues = response.series.flatMap((series) =>
+      series.points.map((point) => this.toNumericValue(point.value)).filter((value) => value > 0)
+    );
+    const maxValue = Math.max(...allValues, 0.1);
 
-    return Object.keys(this.seriesConfig).map((key) => {
-      const points = allPoints.filter((point) => point.key === key);
-      const hasData = points.length > 0;
-      const path = hasData ? this.createPath(points, fromTs, timespan, maxValue, chartWidth, chartHeight) : '';
+    return Object.entries(this.seriesConfig).map(([key, config]) => {
+      const series = response.series.find((entry) => entry.meter_type === key);
+      const path = series ? this.createPath(series, fromTs, timespan, maxValue, chartWidth, chartHeight) : '';
 
       return {
         key,
-        label: this.seriesConfig[key].label,
-        color: this.seriesConfig[key].color,
+        label: config.label,
+        color: config.color,
         path,
-        hasData
+        hasData: Boolean(series?.points.length)
       };
     });
   }
 
   private createPath(
-    points: Array<{ ts: string; value: number }>,
+    series: EnergySeries,
     fromTs: number,
     timespan: number,
     maxValue: number,
     chartWidth: number,
     chartHeight: number
   ): string {
-    if (!points.length) {
+    if (!series.points.length) {
       return '';
     }
 
-    return points
+    return series.points
       .map((point, index) => {
         const x = ((new Date(point.ts).getTime() - fromTs) / timespan) * chartWidth;
-        const y = chartHeight - (point.value / maxValue) * chartHeight;
+        const value = this.toNumericValue(point.value);
+        const y = chartHeight - (value / maxValue) * chartHeight;
 
         return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
       })
       .join(' ');
   }
 
-  private toDateParam(dateValue: string): string {
-    return dateValue.slice(0, 10);
+  private toNumericValue(value: number | string): number {
+    const numericValue = typeof value === 'number' ? value : Number.parseFloat(value);
+
+    return Number.isFinite(numericValue) ? numericValue : 0;
   }
 }

@@ -1,74 +1,35 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import {
-  DailyConsumptionItem,
-  DailyConsumptionParams,
-  EnergyPeriod,
-  EnergySummary,
-  EnergyTimeseriesResponse
-} from './energy.models';
+import { EnergyPeriod, EnergySummary, EnergyTimeseriesQueryParams, EnergyTimeseriesResponse } from './energy.models';
 
 @Injectable({ providedIn: 'root' })
 export class EnergyService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = 'http://localhost:8000/api/customers/me/energy';
-  private readonly customerBaseUrl = 'http://localhost:8000/api/customers';
 
   simulate(): Observable<unknown> {
     return this.http.post(`${this.baseUrl}/simulate`, {});
   }
 
   getSummary(period?: EnergyPeriod): Observable<EnergySummary> {
-    const params = this.addPeriodParam(new HttpParams(), period);
+    const params = period ? new HttpParams().set('period', period) : new HttpParams();
 
     return this.http.get<EnergySummary>(`${this.baseUrl}/summary`, { params });
   }
 
-  getTimeseries(from?: string, to?: string, period?: EnergyPeriod): Observable<EnergyTimeseriesResponse> {
-    if ((!from || !to) && period) {
-      const range = this.getPeriodRange(period);
-      from = from ?? range.from;
-      to = to ?? range.to;
+  getTimeseries(params?: EnergyTimeseriesQueryParams): Observable<EnergyTimeseriesResponse> {
+    let requestParams = new HttpParams().set('interval', '15m');
+
+    if (params?.from) {
+      requestParams = requestParams.set('from', params.from);
     }
 
-    let params = this.addPeriodParam(new HttpParams(), period);
-
-    if (from) {
-      params = params.set('from', from);
+    if (params?.to) {
+      requestParams = requestParams.set('to', params.to);
     }
 
-    if (to) {
-      params = params.set('to', to);
-    }
-
-    return this.http.get<EnergyTimeseriesResponse>(`${this.baseUrl}/timeseries`, { params });
-  }
-
-  getCustomerDailyConsumption(
-    customerId: string,
-    params?: DailyConsumptionParams
-  ): Observable<DailyConsumptionItem[]> {
-    let requestParams = new HttpParams();
-
-    if (params?.start_date) {
-      requestParams = requestParams.set('start_date', params.start_date);
-    }
-
-    if (params?.end_date) {
-      requestParams = requestParams.set('end_date', params.end_date);
-    }
-
-    requestParams = requestParams.set('auto_generate', String(params?.auto_generate ?? true));
-
-    return this.http.get<DailyConsumptionItem[]>(
-      `${this.customerBaseUrl}/${customerId}/consumption/daily`,
-      { params: requestParams }
-    );
-  }
-
-  private addPeriodParam(params: HttpParams, period?: EnergyPeriod): HttpParams {
-    return period ? params.set('period', period) : params;
+    return this.http.get<EnergyTimeseriesResponse>(`${this.baseUrl}/timeseries`, { params: requestParams });
   }
 
   getPeriodRange(period: EnergyPeriod, now = new Date()): { from: string; to: string } {

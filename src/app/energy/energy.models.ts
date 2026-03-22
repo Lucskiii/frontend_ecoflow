@@ -1,5 +1,10 @@
 export type EnergyPeriod = 'today' | '7d' | '30d';
 
+export interface EnergyTimeseriesQueryParams {
+  from?: string;
+  to?: string;
+}
+
 export interface EnergySummary {
   period: string;
   grid_import_kwh: number;
@@ -11,7 +16,7 @@ export interface EnergySummary {
 
 export interface EnergyPoint {
   ts: string;
-  value: number;
+  value: number | string;
 }
 
 export interface EnergySeries {
@@ -27,18 +32,3 @@ export interface EnergyTimeseriesResponse {
   series: EnergySeries[];
 }
 
-export interface DailyConsumptionItem {
-  consumption_date: string;
-  consumption_kwh: number;
-  grid_import_kwh?: number;
-  grid_export_kwh?: number;
-  pv_generation_kwh?: number;
-  self_consumption_share_pct?: number;
-  source_type?: string;
-}
-
-export interface DailyConsumptionParams {
-  start_date?: string;
-  end_date?: string;
-  auto_generate?: boolean;
-}
