@@ -15,6 +15,7 @@ form {
 }
 
 input,
+select,
 button {
   padding: 0.6rem;
 }
@@ -25,6 +26,11 @@ button {
 
 .success {
   color: #0a7a2f;
+}
+
+.hint {
+  margin-bottom: 1rem;
+  color: #333;
 }
 
 small {
