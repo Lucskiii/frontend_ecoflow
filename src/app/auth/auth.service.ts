@@ -8,6 +8,16 @@ interface AuthResponse {
   access_token?: string;
 }
 
+export interface RegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+  address_line1: string;
+  city: string;
+  postal_code: string;
+  country: string;
+}
+
 export interface CustomerProfile {
   id?: string;
   name: string;
@@ -47,8 +57,8 @@ export class AuthService {
       );
   }
 
-  register(name: string, email: string, password: string): Observable<unknown> {
-    return this.http.post('http://localhost:8000/api/auth/register', { name, email, password });
+  register(payload: RegisterPayload): Observable<unknown> {
+    return this.http.post('http://localhost:8000/api/auth/register', payload);
   }
 
   getCurrentCustomer(): Observable<CustomerProfile | null> {
