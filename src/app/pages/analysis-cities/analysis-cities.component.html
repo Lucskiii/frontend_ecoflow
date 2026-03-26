@@ -1,0 +1,69 @@
+<section class="analysis-cities">
+  <header class="page-header">
+    <div>
+      <h1>Analysis Cities</h1>
+      <p>Städte für Analysen verwalten</p>
+    </div>
+    <a class="back-link" routerLink="/dashboard">Zum Dashboard</a>
+  </header>
+
+  <div class="toast success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="toast error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="add-form">
+    <label for="city_name">Stadtname *</label>
+    <input id="city_name" type="text" formControlName="city_name" placeholder="Berlin" />
+    <small *ngIf="form.controls.city_name.touched && form.controls.city_name.invalid">Stadtname ist erforderlich.</small>
+
+    <label for="country_code">Ländercode (optional)</label>
+    <input id="country_code" type="text" formControlName="country_code" placeholder="DE" maxlength="2" />
+
+    <button type="submit" [disabled]="isSubmitting">
+      <span *ngIf="isSubmitting" class="spinner" aria-hidden="true"></span>
+      {{ isSubmitting ? 'Wird gespeichert...' : 'Stadt hinzufügen' }}
+    </button>
+  </form>
+
+  <section class="table-wrap">
+    <h2>Vorhandene Analysis Cities</h2>
+
+    <div *ngIf="isLoadingList" class="state-message">Liste wird geladen ...</div>
+    <div *ngIf="!isLoadingList && cities.length === 0" class="state-message">Noch keine Städte vorhanden.</div>
+
+    <table *ngIf="!isLoadingList && cities.length > 0">
+      <thead>
+        <tr>
+          <th>city_name</th>
+          <th>country_code</th>
+          <th>country_name</th>
+          <th>latitude</th>
+          <th>longitude</th>
+          <th>admin1</th>
+          <th>timezone</th>
+          <th>Aktion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let city of cities">
+          <td>{{ city.city_name }}</td>
+          <td>{{ city.country_code || '-' }}</td>
+          <td>{{ city.country_name }}</td>
+          <td>{{ city.latitude | number: '1.2-5' }}</td>
+          <td>{{ city.longitude | number: '1.2-5' }}</td>
+          <td>{{ city.admin1 }}</td>
+          <td>{{ city.timezone }}</td>
+          <td>
+            <button
+              type="button"
+              class="danger"
+              [disabled]="deletingCityId === city.id"
+              (click)="deleteCity(city.id)"
+            >
+              {{ deletingCityId === city.id ? 'Lösche...' : 'Delete' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</section>
