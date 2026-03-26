@@ -46,6 +46,15 @@ describe('WeatherPriceAnalysisService', () => {
     expect(request.request.method).toBe('GET');
     request.flush({ analysis_run_id: 'run-2', status: 'done' });
   });
+
+  it('sends PATCH /api/analysis/weather-price/{id}/name', () => {
+    service.renameAnalysisRun('run-2', { run_name: 'Mein Lauf' }).subscribe();
+
+    const request = httpMock.expectOne('http://localhost:8000/api/analysis/weather-price/run-2/name');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ run_name: 'Mein Lauf' });
+    request.flush({ analysis_run_id: 'run-2', run_name: 'Mein Lauf', status: 'renamed' });
+  });
 });
 
 describe('mapWeatherPriceAnalysisError', () => {

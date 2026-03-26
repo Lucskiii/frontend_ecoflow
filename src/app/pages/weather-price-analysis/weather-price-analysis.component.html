@@ -12,6 +12,9 @@
 
   <form [formGroup]="form" (ngSubmit)="submit()" class="analysis-form">
     <div class="grid">
+      <label for="run_name">run_name (optional)</label>
+      <input id="run_name" type="text" formControlName="run_name" placeholder="z.B. Q2 Städte-Mix" />
+
       <label for="start_date">start_date *</label>
       <input id="start_date" type="date" formControlName="start_date" />
       <small class="error-text" *ngIf="form.controls.start_date.touched && form.controls.start_date.invalid">start_date ist erforderlich.</small>
@@ -73,6 +76,29 @@
     </button>
   </form>
 
+  <section class="result-loader" [formGroup]="loadForm">
+    <h2>Bestehende Analyse laden/benennen</h2>
+    <div class="grid">
+      <label for="analysis_run_id">analysis_run_id *</label>
+      <input id="analysis_run_id" type="text" formControlName="analysis_run_id" placeholder="run-uuid" />
+
+      <label for="rename_run_name">Neuer run_name</label>
+      <input id="rename_run_name" type="text" formControlName="rename_run_name" placeholder="Mein Analyse-Lauf März" />
+    </div>
+
+    <div class="actions">
+      <button type="button" (click)="loadExistingAnalysis()" [disabled]="isSubmitting">Analyse laden</button>
+      <button type="button" (click)="loadAnalysisStatus()" [disabled]="isSubmitting">Status laden</button>
+      <button type="button" (click)="renameAnalysis()" [disabled]="isSubmitting">Namen speichern</button>
+    </div>
+
+    <p class="state-message" *ngIf="statusResult as status">
+      Aktueller Status: <strong>{{ status.status }}</strong>
+      <span *ngIf="status.run_name">({{ status.run_name }})</span>
+      <span *ngIf="status.message">- {{ status.message }}</span>
+    </p>
+  </section>
+
   <section class="result" *ngIf="!hasResults && !isSubmitting">
     <h2>Ergebnis</h2>
     <p class="state-message">Noch keine Analyse ausgeführt.</p>
@@ -81,6 +107,7 @@
   <section class="result" *ngIf="result as analysisResult">
     <h2>Ergebnis</h2>
     <p><strong>analysis_run_id:</strong> {{ analysisResult.analysis_run_id }}</p>
+    <p><strong>run_name:</strong> {{ analysisResult.run_name || "-" }}</p>
 
     <div class="meta-grid">
       <article>

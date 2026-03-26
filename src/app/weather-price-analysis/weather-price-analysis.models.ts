@@ -6,11 +6,16 @@ export interface WeatherPriceAnalysisCityWeight {
 }
 
 export interface WeatherPriceAnalysisRequest {
+  run_name?: string;
   start_date: string;
   end_date: string;
   product_id?: string;
   price_type?: WeatherPriceType;
   cities: WeatherPriceAnalysisCityWeight[];
+}
+
+export interface WeatherPriceAnalysisRenameRequest {
+  run_name: string;
 }
 
 export interface WeatherPriceAnalysisDataPoint {
@@ -26,6 +31,7 @@ export interface WeatherPriceAnalysisDataPoint {
 
 export interface WeatherPriceAnalysisResponse {
   analysis_run_id: string;
+  run_name?: string;
   normalized_weights: Record<string, number>;
   rows_inserted_weather: number;
   rows_inserted_aggregate: number;
@@ -35,6 +41,7 @@ export interface WeatherPriceAnalysisResponse {
 
 export interface WeatherPriceAnalysisStatusResponse {
   analysis_run_id: string;
+  run_name?: string;
   status: string;
   message?: string;
 }

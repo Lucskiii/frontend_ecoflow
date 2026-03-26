@@ -2,6 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
+  WeatherPriceAnalysisRenameRequest,
   WeatherPriceAnalysisRequest,
   WeatherPriceAnalysisResponse,
   WeatherPriceAnalysisStatusResponse
@@ -22,6 +23,10 @@ export class WeatherPriceAnalysisService {
 
   getAnalysisStatus(analysisRunId: string): Observable<WeatherPriceAnalysisStatusResponse> {
     return this.http.get<WeatherPriceAnalysisStatusResponse>(`${this.baseUrl}/${analysisRunId}/status`);
+  }
+
+  renameAnalysisRun(analysisRunId: string, payload: WeatherPriceAnalysisRenameRequest): Observable<WeatherPriceAnalysisStatusResponse> {
+    return this.http.patch<WeatherPriceAnalysisStatusResponse>(`${this.baseUrl}/${analysisRunId}/name`, payload);
   }
 }
 

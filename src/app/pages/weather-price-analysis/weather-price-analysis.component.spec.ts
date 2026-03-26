@@ -46,18 +46,39 @@ describe('WeatherPriceAnalysisComponent', () => {
     runAnalysis: jasmine.createSpy('runAnalysis').and.returnValue(
       of({
         analysis_run_id: 'run-1',
+        run_name: 'Q2 Städte-Mix',
         normalized_weights: { '1': 0.5, '2': 0.5 },
         rows_inserted_weather: 10,
         rows_inserted_aggregate: 10,
         rows_inserted_analysis: 10,
         data: []
       })
+    ),
+    getAnalysis: jasmine.createSpy('getAnalysis').and.returnValue(
+      of({
+        analysis_run_id: 'run-1',
+        run_name: 'Gespeicherter Lauf',
+        normalized_weights: { '1': 1 },
+        rows_inserted_weather: 5,
+        rows_inserted_aggregate: 5,
+        rows_inserted_analysis: 5,
+        data: []
+      })
+    ),
+    getAnalysisStatus: jasmine.createSpy('getAnalysisStatus').and.returnValue(
+      of({ analysis_run_id: 'run-1', run_name: 'Gespeicherter Lauf', status: 'done' })
+    ),
+    renameAnalysisRun: jasmine.createSpy('renameAnalysisRun').and.returnValue(
+      of({ analysis_run_id: 'run-1', run_name: 'Neuer Name', status: 'renamed' })
     )
   };
 
   beforeEach(async () => {
     analysisCityServiceMock.listCities.calls.reset();
     weatherPriceServiceMock.runAnalysis.calls.reset();
+    weatherPriceServiceMock.getAnalysis.calls.reset();
+    weatherPriceServiceMock.getAnalysisStatus.calls.reset();
+    weatherPriceServiceMock.renameAnalysisRun.calls.reset();
 
     await TestBed.configureTestingModule({
       imports: [WeatherPriceAnalysisComponent],
@@ -81,6 +102,7 @@ describe('WeatherPriceAnalysisComponent', () => {
     cities.at(0).patchValue({ analysis_city_id: 1, weight: 3 });
 
     (component as any).form.patchValue({
+      run_name: 'Q2 Städte-Mix',
       start_date: '2026-03-01',
       end_date: '2026-03-03',
       product_id: 'PHELIX',
@@ -90,6 +112,7 @@ describe('WeatherPriceAnalysisComponent', () => {
     (component as any).submit();
 
     expect(weatherPriceServiceMock.runAnalysis).toHaveBeenCalledWith({
+      run_name: 'Q2 Städte-Mix',
       start_date: '2026-03-01',
       end_date: '2026-03-03',
       product_id: 'PHELIX',
@@ -110,6 +133,25 @@ describe('WeatherPriceAnalysisComponent', () => {
     expect(cities.errors?.['duplicateCities']).toBeTrue();
   });
 
+
+
+  it('loads an existing analysis by run id', () => {
+    (component as any).loadForm.patchValue({ analysis_run_id: 'run-1' });
+
+    (component as any).loadExistingAnalysis();
+
+    expect(weatherPriceServiceMock.getAnalysis).toHaveBeenCalledWith('run-1');
+    expect((component as any).result?.run_name).toBe('Gespeicherter Lauf');
+  });
+
+  it('renames an analysis run', () => {
+    (component as any).loadForm.patchValue({ analysis_run_id: 'run-1', rename_run_name: 'Neuer Name' });
+
+    (component as any).renameAnalysis();
+
+    expect(weatherPriceServiceMock.renameAnalysisRun).toHaveBeenCalledWith('run-1', { run_name: 'Neuer Name' });
+  });
+
   it('maps API error message on submit failure', () => {
     weatherPriceServiceMock.runAnalysis.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 422, error: { detail: 'invalid weights' } }))
@@ -119,6 +161,7 @@ describe('WeatherPriceAnalysisComponent', () => {
     cities.at(0).patchValue({ analysis_city_id: 1, weight: 0.1 });
 
     (component as any).form.patchValue({
+      run_name: 'Q2 Städte-Mix',
       start_date: '2026-03-01',
       end_date: '2026-03-03',
       price_type: 'spot'
