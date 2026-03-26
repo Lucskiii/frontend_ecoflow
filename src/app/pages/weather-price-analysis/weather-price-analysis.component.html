@@ -1,0 +1,162 @@
+<section class="weather-analysis">
+  <header class="page-header">
+    <div>
+      <h1>Weather Price Analysis</h1>
+      <p>Wetter- und Preiszeitreihen für mehrere Analysis Cities kombinieren</p>
+    </div>
+    <a class="back-link" routerLink="/dashboard">Zum Dashboard</a>
+  </header>
+
+  <div class="toast success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="toast error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="analysis-form">
+    <div class="grid">
+      <label for="start_date">start_date *</label>
+      <input id="start_date" type="date" formControlName="start_date" />
+
+      <label for="end_date">end_date *</label>
+      <input id="end_date" type="date" formControlName="end_date" />
+
+      <label for="product_id">product_id (optional)</label>
+      <input id="product_id" type="text" formControlName="product_id" placeholder="z.B. PHELIX-DAY" />
+
+      <label for="price_type">price_type</label>
+      <select id="price_type" formControlName="price_type">
+        <option value="spot">spot</option>
+        <option value="intraday">intraday</option>
+        <option value="day_ahead">day_ahead</option>
+      </select>
+    </div>
+
+    <section class="cities" formArrayName="cities">
+      <div class="cities-header">
+        <h2>Cities & Weights</h2>
+        <button type="button" (click)="addCity()">Stadt hinzufügen</button>
+      </div>
+
+      <div *ngIf="isLoadingCities" class="state-message">Cities werden geladen ...</div>
+      <div *ngIf="!isLoadingCities && availableCities.length === 0" class="state-message error">
+        Keine Analysis Cities vorhanden. Bitte zuerst Cities anlegen.
+      </div>
+
+      <div class="city-row" *ngFor="let cityGroup of citiesControls; index as i" [formGroupName]="i">
+        <label [for]="'analysis_city_' + i">Analysis City *</label>
+        <select [id]="'analysis_city_' + i" formControlName="analysis_city_id">
+          <option [ngValue]="0">Bitte auswählen</option>
+          <option *ngFor="let city of availableCities" [ngValue]="city.id">
+            {{ city.city_name }} ({{ city.country_code || city.country_name }})
+          </option>
+        </select>
+
+        <label [for]="'weight_' + i">Gewicht *</label>
+        <input [id]="'weight_' + i" type="number" min="0.0000001" step="0.01" formControlName="weight" />
+
+        <button type="button" class="danger" (click)="removeCity(i)" [disabled]="citiesControls.length === 1">Entfernen</button>
+      </div>
+
+      <small class="error-text" *ngIf="form.controls.cities.errors?.['minOneCity']">
+        Mindestens eine Stadt ist erforderlich.
+      </small>
+      <small class="error-text" *ngIf="form.controls.cities.errors?.['duplicateCities']">
+        Bitte keine Stadt doppelt auswählen.
+      </small>
+    </section>
+
+    <button type="submit" [disabled]="isSubmitting || isLoadingCities || availableCities.length === 0">
+      <span *ngIf="isSubmitting" class="spinner" aria-hidden="true"></span>
+      {{ isSubmitting ? 'Analysiere ...' : 'Analysieren' }}
+    </button>
+  </form>
+
+  <section class="result" *ngIf="!hasResults && !isSubmitting">
+    <h2>Ergebnis</h2>
+    <p class="state-message">Noch keine Analyse ausgeführt.</p>
+  </section>
+
+  <section class="result" *ngIf="result as analysisResult">
+    <h2>Ergebnis</h2>
+    <p><strong>analysis_run_id:</strong> {{ analysisResult.analysis_run_id }}</p>
+
+    <div class="meta-grid">
+      <article>
+        <p>rows_inserted_weather</p>
+        <strong>{{ analysisResult.rows_inserted_weather }}</strong>
+      </article>
+      <article>
+        <p>rows_inserted_aggregate</p>
+        <strong>{{ analysisResult.rows_inserted_aggregate }}</strong>
+      </article>
+      <article>
+        <p>rows_inserted_analysis</p>
+        <strong>{{ analysisResult.rows_inserted_analysis }}</strong>
+      </article>
+    </div>
+
+    <h3>Normalized Weights</h3>
+    <ul>
+      <li *ngFor="let cityGroup of citiesControls">
+        {{ cityNameById(cityGroup.controls['analysis_city_id'].value) }}:
+        {{ normalizedWeightForCity(cityGroup.controls['analysis_city_id'].value) }}
+      </li>
+    </ul>
+
+    <div class="chart-wrap" *ngIf="hasChartData">
+      <h3>Linienchart (Preis + Temperatur)</h3>
+      <svg viewBox="0 0 760 220" role="img" aria-label="Weather Price Analysis Chart">
+        <line x1="0" y1="219" x2="760" y2="219" class="axis"></line>
+        <line x1="1" y1="0" x2="1" y2="220" class="axis"></line>
+        <path
+          *ngFor="let line of chartLines"
+          [attr.d]="line.path"
+          [attr.stroke]="line.color"
+          fill="none"
+          stroke-width="2"
+          stroke-linejoin="round"
+          stroke-linecap="round"
+          [attr.opacity]="line.hasData ? 1 : 0"
+        ></path>
+      </svg>
+
+      <ul class="legend">
+        <li *ngFor="let line of chartLines">
+          <span class="dot" [style.background]="line.color"></span>
+          {{ line.label }}
+        </li>
+      </ul>
+    </div>
+
+    <div class="table-wrap" *ngIf="analysisResult.data.length > 0; else noData">
+      <table>
+        <thead>
+          <tr>
+            <th>ts_utc</th>
+            <th>temp_c_weighted</th>
+            <th>wind_ms_weighted</th>
+            <th>ghi_wm2_weighted</th>
+            <th>cloud_pct_weighted</th>
+            <th>price_eur_mwh</th>
+            <th>product_id</th>
+            <th>price_type</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of analysisResult.data">
+            <td>{{ row.ts_utc | date: 'short' }}</td>
+            <td>{{ row.temp_c_weighted | number: '1.2-2' }}</td>
+            <td>{{ row.wind_ms_weighted | number: '1.2-2' }}</td>
+            <td>{{ row.ghi_wm2_weighted | number: '1.0-2' }}</td>
+            <td>{{ row.cloud_pct_weighted | number: '1.0-2' }}</td>
+            <td>{{ row.price_eur_mwh | number: '1.2-2' }}</td>
+            <td>{{ row.product_id }}</td>
+            <td>{{ row.price_type }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noData>
+      <p class="state-message">Analyse ausgeführt, aber keine Datenpunkte zurückgegeben.</p>
+    </ng-template>
+  </section>
+</section>

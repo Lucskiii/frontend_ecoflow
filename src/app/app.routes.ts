@@ -5,6 +5,7 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { PortfolioComponent } from './pages/portfolio/portfolio.component';
 import { AnalysisCitiesComponent } from './pages/analysis-cities/analysis-cities.component';
+import { WeatherPriceAnalysisComponent } from './pages/weather-price-analysis/weather-price-analysis.component';
 import { authGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
@@ -15,5 +16,6 @@ export const routes: Routes = [
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'portfolio', component: PortfolioComponent, canActivate: [authGuard] },
   { path: 'analysis-cities', component: AnalysisCitiesComponent, canActivate: [authGuard] },
+  { path: 'weather-price-analysis', component: WeatherPriceAnalysisComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: 'login' }
 ];
