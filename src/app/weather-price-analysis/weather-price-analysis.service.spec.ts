@@ -21,28 +21,28 @@ describe('WeatherPriceAnalysisService', () => {
     httpMock.verify();
   });
 
-  it('sends POST /analysis/weather-price', () => {
+  it('sends POST /api/analysis/weather-price', () => {
     service
       .runAnalysis({ start_date: '2025-01-01', end_date: '2025-01-02', price_type: 'spot', cities: [{ analysis_city_id: 1, weight: 0.7 }] })
       .subscribe();
 
-    const request = httpMock.expectOne('http://localhost:8000/analysis/weather-price');
+    const request = httpMock.expectOne('http://localhost:8000/api/analysis/weather-price');
     expect(request.request.method).toBe('POST');
     request.flush({ analysis_run_id: 'abc', normalized_weights: {}, data: [] });
   });
 
-  it('sends GET /analysis/weather-price/{id}', () => {
+  it('sends GET /api/analysis/weather-price/{id}', () => {
     service.getAnalysis('run-1').subscribe();
 
-    const request = httpMock.expectOne('http://localhost:8000/analysis/weather-price/run-1');
+    const request = httpMock.expectOne('http://localhost:8000/api/analysis/weather-price/run-1');
     expect(request.request.method).toBe('GET');
     request.flush({ analysis_run_id: 'run-1', normalized_weights: {}, data: [] });
   });
 
-  it('sends GET /analysis/weather-price/{id}/status', () => {
+  it('sends GET /api/analysis/weather-price/{id}/status', () => {
     service.getAnalysisStatus('run-2').subscribe();
 
-    const request = httpMock.expectOne('http://localhost:8000/analysis/weather-price/run-2/status');
+    const request = httpMock.expectOne('http://localhost:8000/api/analysis/weather-price/run-2/status');
     expect(request.request.method).toBe('GET');
     request.flush({ analysis_run_id: 'run-2', status: 'done' });
   });

@@ -10,7 +10,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class WeatherPriceAnalysisService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:8000/analysis/weather-price';
+  private readonly baseUrl = 'http://localhost:8000/api/analysis/weather-price';
 
   runAnalysis(payload: WeatherPriceAnalysisRequest): Observable<WeatherPriceAnalysisResponse> {
     return this.http.post<WeatherPriceAnalysisResponse>(this.baseUrl, payload);
