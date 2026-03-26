@@ -133,7 +133,19 @@
     </ul>
 
     <div class="chart-wrap" *ngIf="hasChartData">
-      <h3>Linienchart (Preis + Temperatur)</h3>
+      <div class="chart-toolbar">
+        <h3>Linienchart (Preis + Wettermetrik)</h3>
+        <label for="chart_metric">Wettermetrik</label>
+        <select
+          id="chart_metric"
+          [value]="selectedChartMetric"
+          (change)="onChartMetricChange($any($event.target).value)"
+        >
+          <option *ngFor="let metric of chartMetricOptions" [value]="metric.key">
+            {{ metric.label }}
+          </option>
+        </select>
+      </div>
       <svg viewBox="0 0 760 220" role="img" aria-label="Weather Price Analysis Chart">
         <line x1="0" y1="219" x2="760" y2="219" class="axis"></line>
         <line x1="1" y1="0" x2="1" y2="220" class="axis"></line>

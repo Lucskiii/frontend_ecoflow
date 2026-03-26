@@ -62,7 +62,28 @@ describe('WeatherPriceAnalysisComponent', () => {
         rows_inserted_weather: 5,
         rows_inserted_aggregate: 5,
         rows_inserted_analysis: 5,
-        data: []
+        data: [
+          {
+            ts_utc: '2026-03-01T00:00:00Z',
+            temp_c_weighted: 5,
+            wind_ms_weighted: 3,
+            ghi_wm2_weighted: 100,
+            cloud_pct_weighted: 45,
+            price_eur_mwh: 80,
+            product_id: 'PHELIX',
+            price_type: 'spot'
+          },
+          {
+            ts_utc: '2026-03-01T01:00:00Z',
+            temp_c_weighted: 6,
+            wind_ms_weighted: 4,
+            ghi_wm2_weighted: 120,
+            cloud_pct_weighted: 35,
+            price_eur_mwh: 75,
+            product_id: 'PHELIX',
+            price_type: 'spot'
+          }
+        ]
       })
     ),
     getAnalysisStatus: jasmine.createSpy('getAnalysisStatus').and.returnValue(
@@ -142,6 +163,16 @@ describe('WeatherPriceAnalysisComponent', () => {
 
     expect(weatherPriceServiceMock.getAnalysis).toHaveBeenCalledWith('run-1');
     expect((component as any).result?.run_name).toBe('Gespeicherter Lauf');
+  });
+
+  it('switches chart metric via dropdown selection', () => {
+    (component as any).loadForm.patchValue({ analysis_run_id: 'run-1' });
+    (component as any).loadExistingAnalysis();
+
+    (component as any).onChartMetricChange('wind_ms_weighted');
+
+    expect((component as any).selectedChartMetric).toBe('wind_ms_weighted');
+    expect((component as any).chartLines[1].label).toBe('Wind (m/s, weighted)');
   });
 
   it('renames an analysis run', () => {

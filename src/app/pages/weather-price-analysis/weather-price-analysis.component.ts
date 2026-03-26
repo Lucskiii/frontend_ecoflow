@@ -14,6 +14,7 @@ import { finalize } from 'rxjs';
 import { AnalysisCity } from '../../analysis-cities/analysis-city.models';
 import { AnalysisCityService } from '../../analysis-cities/analysis-city.service';
 import {
+  WeatherPriceAnalysisDataPoint,
   WeatherPriceAnalysisRequest,
   WeatherPriceAnalysisResponse,
   WeatherPriceAnalysisStatusResponse
@@ -28,6 +29,12 @@ interface AnalysisChartLine {
   color: string;
   path: string;
   hasData: boolean;
+}
+
+interface AnalysisMetricOption {
+  key: keyof WeatherPriceAnalysisDataPoint;
+  label: string;
+  color: string;
 }
 
 @Component({
@@ -59,6 +66,13 @@ export class WeatherPriceAnalysisComponent implements OnInit {
   protected chartLines: AnalysisChartLine[] = [];
   protected hasChartData = false;
   protected statusResult: WeatherPriceAnalysisStatusResponse | null = null;
+  protected readonly chartMetricOptions: AnalysisMetricOption[] = [
+    { key: 'temp_c_weighted', label: 'Temp (°C, weighted)', color: '#3b82f6' },
+    { key: 'wind_ms_weighted', label: 'Wind (m/s, weighted)', color: '#8b5cf6' },
+    { key: 'cloud_pct_weighted', label: 'Cloud (%, weighted)', color: '#0ea5e9' },
+    { key: 'ghi_wm2_weighted', label: 'GHI (W/m², weighted)', color: '#22c55e' }
+  ];
+  protected selectedChartMetric: AnalysisMetricOption['key'] = 'temp_c_weighted';
 
   protected readonly loadForm = this.fb.nonNullable.group({
     analysis_run_id: ['', [Validators.required]],
@@ -153,6 +167,19 @@ export class WeatherPriceAnalysisComponent implements OnInit {
           this.errorMessage = mapWeatherPriceAnalysisError(error);
         }
       });
+  }
+
+  protected onChartMetricChange(metric: string): void {
+    const selectedMetric = this.chartMetricOptions.find((option) => option.key === metric)?.key;
+    if (!selectedMetric) {
+      return;
+    }
+
+    this.selectedChartMetric = selectedMetric;
+    if (this.result) {
+      this.chartLines = this.createChartLines(this.result);
+      this.hasChartData = this.chartLines.some((line) => line.hasData);
+    }
   }
 
   private get citiesFormArray(): FormArray<FormGroup> {
@@ -308,9 +335,16 @@ export class WeatherPriceAnalysisComponent implements OnInit {
     const toTs = new Date(sorted[sorted.length - 1].ts_utc).getTime();
     const timespan = Math.max(toTs - fromTs, 1);
 
+    const selectedMetricOption =
+      this.chartMetricOptions.find((option) => option.key === this.selectedChartMetric) ?? this.chartMetricOptions[0];
+
     const lineDefs: Array<{ label: string; color: string; values: number[] }> = [
       { label: 'Preis (EUR/MWh)', color: '#f97316', values: sorted.map((row) => row.price_eur_mwh) },
-      { label: 'Temp (°C, weighted)', color: '#3b82f6', values: sorted.map((row) => row.temp_c_weighted) }
+      {
+        label: selectedMetricOption.label,
+        color: selectedMetricOption.color,
+        values: sorted.map((row) => Number(row[selectedMetricOption.key]))
+      }
     ];
 
     return lineDefs.map((line) => {
