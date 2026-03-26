@@ -18,7 +18,8 @@
 }
 
 .analysis-form,
-.result {
+.result,
+.result-loader {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
@@ -142,4 +143,11 @@ button.danger {
   to {
     transform: rotate(360deg);
   }
+}
+
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }

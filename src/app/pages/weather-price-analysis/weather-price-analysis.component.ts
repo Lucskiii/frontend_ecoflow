@@ -15,7 +15,8 @@ import { AnalysisCity } from '../../analysis-cities/analysis-city.models';
 import { AnalysisCityService } from '../../analysis-cities/analysis-city.service';
 import {
   WeatherPriceAnalysisRequest,
-  WeatherPriceAnalysisResponse
+  WeatherPriceAnalysisResponse,
+  WeatherPriceAnalysisStatusResponse
 } from '../../weather-price-analysis/weather-price-analysis.models';
 import {
   WeatherPriceAnalysisService,
@@ -41,6 +42,7 @@ export class WeatherPriceAnalysisComponent implements OnInit {
   private readonly weatherPriceAnalysisService = inject(WeatherPriceAnalysisService);
 
   protected readonly form = this.fb.nonNullable.group({
+    run_name: [''],
     start_date: ['', [Validators.required]],
     end_date: ['', [Validators.required]],
     product_id: [''],
@@ -56,6 +58,12 @@ export class WeatherPriceAnalysisComponent implements OnInit {
   protected result: WeatherPriceAnalysisResponse | null = null;
   protected chartLines: AnalysisChartLine[] = [];
   protected hasChartData = false;
+  protected statusResult: WeatherPriceAnalysisStatusResponse | null = null;
+
+  protected readonly loadForm = this.fb.nonNullable.group({
+    analysis_run_id: ['', [Validators.required]],
+    rename_run_name: ['']
+  });
 
   ngOnInit(): void {
     this.loadCities();
@@ -133,7 +141,10 @@ export class WeatherPriceAnalysisComponent implements OnInit {
           this.result = response;
           this.chartLines = this.createChartLines(response);
           this.hasChartData = this.chartLines.some((line) => line.hasData);
-          this.successMessage = `Analyse ${response.analysis_run_id} erfolgreich erstellt.`;
+          this.loadForm.patchValue({ analysis_run_id: response.analysis_run_id, rename_run_name: response.run_name ?? '' });
+          this.successMessage = response.run_name
+            ? `Analyse "${response.run_name}" (${response.analysis_run_id}) erfolgreich erstellt.`
+            : `Analyse ${response.analysis_run_id} erfolgreich erstellt.`;
         },
         error: (error: unknown) => {
           this.result = null;
@@ -152,6 +163,7 @@ export class WeatherPriceAnalysisComponent implements OnInit {
     const value = this.form.getRawValue();
 
     return {
+      run_name: value.run_name.trim() || undefined,
       start_date: value.start_date,
       end_date: value.end_date,
       product_id: value.product_id.trim() || undefined,
@@ -163,6 +175,98 @@ export class WeatherPriceAnalysisComponent implements OnInit {
     };
   }
 
+
+
+  protected loadExistingAnalysis(): void {
+    const analysisRunId = this.loadForm.controls.analysis_run_id.value.trim();
+    if (!analysisRunId) {
+      this.loadForm.controls.analysis_run_id.markAsTouched();
+      this.errorMessage = 'Bitte eine analysis_run_id zum Laden angeben.';
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.weatherPriceAnalysisService
+      .getAnalysis(analysisRunId)
+      .pipe(finalize(() => (this.isSubmitting = false)))
+      .subscribe({
+        next: (response) => {
+          this.result = response;
+          this.chartLines = this.createChartLines(response);
+          this.hasChartData = this.chartLines.some((line) => line.hasData);
+          this.statusResult = null;
+          this.loadForm.patchValue({ rename_run_name: response.run_name ?? '' });
+          this.successMessage = response.run_name
+            ? `Analyse "${response.run_name}" (${response.analysis_run_id}) geladen.`
+            : `Analyse ${response.analysis_run_id} geladen.`;
+        },
+        error: (error: unknown) => {
+          this.errorMessage = mapWeatherPriceAnalysisError(error);
+        }
+      });
+  }
+
+  protected loadAnalysisStatus(): void {
+    const analysisRunId = this.loadForm.controls.analysis_run_id.value.trim();
+    if (!analysisRunId) {
+      this.loadForm.controls.analysis_run_id.markAsTouched();
+      this.errorMessage = 'Bitte eine analysis_run_id für den Status angeben.';
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.weatherPriceAnalysisService
+      .getAnalysisStatus(analysisRunId)
+      .pipe(finalize(() => (this.isSubmitting = false)))
+      .subscribe({
+        next: (response) => {
+          this.statusResult = response;
+          this.successMessage = response.run_name
+            ? `Status für "${response.run_name}" geladen: ${response.status}.`
+            : `Status für ${response.analysis_run_id} geladen: ${response.status}.`;
+        },
+        error: (error: unknown) => {
+          this.statusResult = null;
+          this.errorMessage = mapWeatherPriceAnalysisError(error);
+        }
+      });
+  }
+
+  protected renameAnalysis(): void {
+    const analysisRunId = this.loadForm.controls.analysis_run_id.value.trim();
+    const runName = this.loadForm.controls.rename_run_name.value.trim();
+
+    if (!analysisRunId || !runName) {
+      this.errorMessage = 'Für das Umbenennen sind analysis_run_id und run_name erforderlich.';
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.weatherPriceAnalysisService
+      .renameAnalysisRun(analysisRunId, { run_name: runName })
+      .pipe(finalize(() => (this.isSubmitting = false)))
+      .subscribe({
+        next: (response) => {
+          this.statusResult = response;
+          if (this.result && this.result.analysis_run_id === analysisRunId) {
+            this.result = { ...this.result, run_name: runName };
+          }
+          this.successMessage = `Analyse ${analysisRunId} wurde auf "${runName}" umbenannt.`;
+        },
+        error: (error: unknown) => {
+          this.errorMessage = mapWeatherPriceAnalysisError(error);
+        }
+      });
+  }
   private loadCities(): void {
     this.isLoadingCities = true;
 
