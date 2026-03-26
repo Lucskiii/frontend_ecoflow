@@ -70,6 +70,17 @@ export class WeatherPriceAnalysisComponent implements OnInit {
     return Boolean(this.result);
   }
 
+
+  protected citySelectionInvalid(index: number): boolean {
+    const control = this.citiesControls[index]?.controls['analysis_city_id'];
+    return Boolean(control && control.touched && control.invalid);
+  }
+
+  protected weightInvalid(index: number): boolean {
+    const control = this.citiesControls[index]?.controls['weight'];
+    return Boolean(control && control.touched && control.invalid);
+  }
+
   protected addCity(): void {
     this.citiesFormArray.push(
       this.fb.nonNullable.group({
@@ -104,6 +115,8 @@ export class WeatherPriceAnalysisComponent implements OnInit {
   protected submit(): void {
     if (this.form.invalid || this.isSubmitting) {
       this.form.markAllAsTouched();
+      this.errorMessage = 'Bitte Formular prüfen: Zeitraum, Städteauswahl und Gewichte sind erforderlich.';
+      this.successMessage = '';
       return;
     }
 

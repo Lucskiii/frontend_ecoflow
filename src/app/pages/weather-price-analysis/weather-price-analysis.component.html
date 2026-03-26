@@ -14,9 +14,11 @@
     <div class="grid">
       <label for="start_date">start_date *</label>
       <input id="start_date" type="date" formControlName="start_date" />
+      <small class="error-text" *ngIf="form.controls.start_date.touched && form.controls.start_date.invalid">start_date ist erforderlich.</small>
 
       <label for="end_date">end_date *</label>
       <input id="end_date" type="date" formControlName="end_date" />
+      <small class="error-text" *ngIf="form.controls.end_date.touched && form.controls.end_date.invalid">end_date ist erforderlich.</small>
 
       <label for="product_id">product_id (optional)</label>
       <input id="product_id" type="text" formControlName="product_id" placeholder="z.B. PHELIX-DAY" />
@@ -48,9 +50,11 @@
             {{ city.city_name }} ({{ city.country_code || city.country_name }})
           </option>
         </select>
+        <small class="error-text" *ngIf="citySelectionInvalid(i)">Bitte eine gültige Stadt auswählen.</small>
 
         <label [for]="'weight_' + i">Gewicht *</label>
         <input [id]="'weight_' + i" type="number" min="0.0000001" step="0.01" formControlName="weight" />
+        <small class="error-text" *ngIf="weightInvalid(i)">Gewicht muss größer als 0 sein.</small>
 
         <button type="button" class="danger" (click)="removeCity(i)" [disabled]="citiesControls.length === 1">Entfernen</button>
       </div>
