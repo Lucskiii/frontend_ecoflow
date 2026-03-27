@@ -7,6 +7,7 @@ export interface WeatherPriceAnalysisCityWeight {
 
 export interface WeatherPriceAnalysisRequest {
   run_name?: string;
+  bidding_zone_id: number;
   start_date: string;
   end_date: string;
   product_id?: string;

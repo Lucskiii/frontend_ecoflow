@@ -50,6 +50,7 @@ export class WeatherPriceAnalysisComponent implements OnInit {
 
   protected readonly form = this.fb.nonNullable.group({
     run_name: [''],
+    bidding_zone_id: [0, [Validators.required, Validators.min(1)]],
     start_date: ['', [Validators.required]],
     end_date: ['', [Validators.required]],
     product_id: [''],
@@ -90,6 +91,11 @@ export class WeatherPriceAnalysisComponent implements OnInit {
 
   protected get hasResults(): boolean {
     return Boolean(this.result);
+  }
+
+  protected get biddingZoneInvalid(): boolean {
+    const control = this.form.controls.bidding_zone_id;
+    return control.touched && control.invalid;
   }
 
 
@@ -137,7 +143,7 @@ export class WeatherPriceAnalysisComponent implements OnInit {
   protected submit(): void {
     if (this.form.invalid || this.isSubmitting) {
       this.form.markAllAsTouched();
-      this.errorMessage = 'Bitte Formular prüfen: Zeitraum, Städteauswahl und Gewichte sind erforderlich.';
+      this.errorMessage = 'Bitte Formular prüfen: Bidding Zone, Zeitraum, Städteauswahl und Gewichte sind erforderlich.';
       this.successMessage = '';
       return;
     }
@@ -191,6 +197,7 @@ export class WeatherPriceAnalysisComponent implements OnInit {
 
     return {
       run_name: value.run_name.trim() || undefined,
+      bidding_zone_id: Number(value.bidding_zone_id),
       start_date: value.start_date,
       end_date: value.end_date,
       product_id: value.product_id.trim() || undefined,

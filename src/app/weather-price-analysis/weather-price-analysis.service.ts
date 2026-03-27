@@ -39,12 +39,19 @@ export function mapWeatherPriceAnalysisError(error: unknown): string {
     error.error && typeof error.error === 'object' && 'detail' in error.error
       ? String((error.error as { detail?: unknown }).detail ?? '')
       : '';
+  const detailLower = detail.toLowerCase();
 
   if (error.status === 404) {
+    if (detailLower.includes('bidding_zone')) {
+      return 'Die gewählte Bidding Zone existiert nicht. Bitte Auswahl prüfen.';
+    }
     return detail || 'Die angeforderte Analyse oder Stadt wurde nicht gefunden.';
   }
 
   if (error.status === 422) {
+    if (!detail || detailLower.includes('bidding_zone')) {
+      return 'Bitte eine gültige Bidding Zone auswählen.';
+    }
     return detail || 'Die Eingabedaten sind ungültig. Bitte Daten und Gewichte prüfen.';
   }
 

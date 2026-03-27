@@ -124,6 +124,7 @@ describe('WeatherPriceAnalysisComponent', () => {
 
     (component as any).form.patchValue({
       run_name: 'Q2 Städte-Mix',
+      bidding_zone_id: 10,
       start_date: '2026-03-01',
       end_date: '2026-03-03',
       product_id: 'PHELIX',
@@ -134,6 +135,7 @@ describe('WeatherPriceAnalysisComponent', () => {
 
     expect(weatherPriceServiceMock.runAnalysis).toHaveBeenCalledWith({
       run_name: 'Q2 Städte-Mix',
+      bidding_zone_id: 10,
       start_date: '2026-03-01',
       end_date: '2026-03-03',
       product_id: 'PHELIX',
@@ -141,6 +143,27 @@ describe('WeatherPriceAnalysisComponent', () => {
       cities: [{ analysis_city_id: 1, weight: 3 }]
     });
     expect((component as any).successMessage).toContain('erfolgreich');
+  });
+
+  it('blocks submit without bidding_zone_id and disables submit button', () => {
+    const cities = (component as any).form.controls.cities;
+    cities.at(0).patchValue({ analysis_city_id: 1, weight: 1 });
+    (component as any).form.patchValue({
+      start_date: '2026-03-01',
+      end_date: '2026-03-03',
+      price_type: 'spot',
+      bidding_zone_id: 0
+    });
+
+    fixture.detectChanges();
+    const submitButton = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+    (component as any).submit();
+    fixture.detectChanges();
+
+    expect(submitButton.disabled).toBeTrue();
+    expect(weatherPriceServiceMock.runAnalysis).not.toHaveBeenCalled();
+    expect((component as any).errorMessage).toContain('Bidding Zone');
   });
 
   it('shows duplicate city validation error', () => {
@@ -193,6 +216,7 @@ describe('WeatherPriceAnalysisComponent', () => {
 
     (component as any).form.patchValue({
       run_name: 'Q2 Städte-Mix',
+      bidding_zone_id: 10,
       start_date: '2026-03-01',
       end_date: '2026-03-03',
       price_type: 'spot'
@@ -201,5 +225,49 @@ describe('WeatherPriceAnalysisComponent', () => {
     (component as any).submit();
 
     expect((component as any).errorMessage).toBe('invalid weights');
+  });
+
+  it('renders friendly 422 message when bidding zone is missing', () => {
+    weatherPriceServiceMock.runAnalysis.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 422 }))
+    );
+
+    const cities = (component as any).form.controls.cities;
+    cities.at(0).patchValue({ analysis_city_id: 1, weight: 0.1 });
+    (component as any).form.patchValue({
+      run_name: 'Q2 Städte-Mix',
+      bidding_zone_id: 10,
+      start_date: '2026-03-01',
+      end_date: '2026-03-03',
+      price_type: 'spot'
+    });
+
+    (component as any).submit();
+    fixture.detectChanges();
+
+    const errorToast = fixture.nativeElement.querySelector('.toast.error') as HTMLElement;
+    expect(errorToast.textContent).toContain('Bitte eine gültige Bidding Zone auswählen.');
+  });
+
+  it('renders friendly 404 message when bidding zone does not exist', () => {
+    weatherPriceServiceMock.runAnalysis.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 404, error: { detail: 'bidding_zone not found' } }))
+    );
+
+    const cities = (component as any).form.controls.cities;
+    cities.at(0).patchValue({ analysis_city_id: 1, weight: 0.1 });
+    (component as any).form.patchValue({
+      run_name: 'Q2 Städte-Mix',
+      bidding_zone_id: 999,
+      start_date: '2026-03-01',
+      end_date: '2026-03-03',
+      price_type: 'spot'
+    });
+
+    (component as any).submit();
+    fixture.detectChanges();
+
+    const errorToast = fixture.nativeElement.querySelector('.toast.error') as HTMLElement;
+    expect(errorToast.textContent).toContain('Die gewählte Bidding Zone existiert nicht. Bitte Auswahl prüfen.');
   });
 });
