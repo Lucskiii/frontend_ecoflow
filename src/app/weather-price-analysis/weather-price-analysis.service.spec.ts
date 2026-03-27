@@ -23,11 +23,18 @@ describe('WeatherPriceAnalysisService', () => {
 
   it('sends POST /api/analysis/weather-price', () => {
     service
-      .runAnalysis({ start_date: '2025-01-01', end_date: '2025-01-02', price_type: 'spot', cities: [{ analysis_city_id: 1, weight: 0.7 }] })
+      .runAnalysis({
+        bidding_zone_id: 10,
+        start_date: '2025-01-01',
+        end_date: '2025-01-02',
+        price_type: 'spot',
+        cities: [{ analysis_city_id: 1, weight: 0.7 }]
+      })
       .subscribe();
 
     const request = httpMock.expectOne('http://localhost:8000/api/analysis/weather-price');
     expect(request.request.method).toBe('POST');
+    expect(request.request.body.bidding_zone_id).toBe(10);
     request.flush({ analysis_run_id: 'abc', normalized_weights: {}, data: [] });
   });
 
@@ -63,9 +70,21 @@ describe('mapWeatherPriceAnalysisError', () => {
     expect(mapped).toBe('Die angeforderte Analyse oder Stadt wurde nicht gefunden.');
   });
 
+  it('maps 404 bidding zone errors to friendly message', () => {
+    const mapped = mapWeatherPriceAnalysisError(
+      new HttpErrorResponse({ status: 404, error: { detail: 'bidding_zone not found' } })
+    );
+    expect(mapped).toBe('Die gewählte Bidding Zone existiert nicht. Bitte Auswahl prüfen.');
+  });
+
   it('maps 422 to validation message', () => {
     const mapped = mapWeatherPriceAnalysisError(new HttpErrorResponse({ status: 422 }));
-    expect(mapped).toBe('Die Eingabedaten sind ungültig. Bitte Daten und Gewichte prüfen.');
+    expect(mapped).toBe('Bitte eine gültige Bidding Zone auswählen.');
+  });
+
+  it('keeps detailed 422 messages for non-bidding-zone errors', () => {
+    const mapped = mapWeatherPriceAnalysisError(new HttpErrorResponse({ status: 422, error: { detail: 'invalid weights' } }));
+    expect(mapped).toBe('invalid weights');
   });
 
   it('maps 503 to upstream message', () => {

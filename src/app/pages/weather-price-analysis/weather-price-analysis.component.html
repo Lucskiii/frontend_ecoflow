@@ -15,6 +15,10 @@
       <label for="run_name">run_name (optional)</label>
       <input id="run_name" type="text" formControlName="run_name" placeholder="z.B. Q2 Städte-Mix" />
 
+      <label for="bidding_zone_id">bidding_zone_id *</label>
+      <input id="bidding_zone_id" type="number" min="1" step="1" formControlName="bidding_zone_id" placeholder="z.B. 10" />
+      <small class="error-text" *ngIf="biddingZoneInvalid">Bitte eine gültige Bidding Zone auswählen.</small>
+
       <label for="start_date">start_date *</label>
       <input id="start_date" type="date" formControlName="start_date" />
       <small class="error-text" *ngIf="form.controls.start_date.touched && form.controls.start_date.invalid">start_date ist erforderlich.</small>
@@ -70,7 +74,7 @@
       </small>
     </section>
 
-    <button type="submit" [disabled]="isSubmitting || isLoadingCities || availableCities.length === 0">
+    <button type="submit" [disabled]="isSubmitting || isLoadingCities || availableCities.length === 0 || form.invalid">
       <span *ngIf="isSubmitting" class="spinner" aria-hidden="true"></span>
       {{ isSubmitting ? 'Analysiere ...' : 'Analysieren' }}
     </button>
