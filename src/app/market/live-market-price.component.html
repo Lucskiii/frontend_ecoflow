@@ -1,0 +1,47 @@
+<section class="live-market-card">
+  <h3>Live Strompreis</h3>
+
+  <div *ngIf="loading" class="state-message">Live-Daten werden geladen ...</div>
+  <div *ngIf="!loading && errorMessage" class="state-message error">{{ errorMessage }}</div>
+
+  <div *ngIf="!loading && !errorMessage && liveData as data">
+    <div *ngIf="!data.current && !data.next && data.points.length === 0" class="state-message">
+      Derzeit sind keine Live-Preiswerte vorhanden.
+    </div>
+
+    <div *ngIf="data.current || data.next || data.points.length > 0">
+      <div class="price-grid">
+        <article class="price-tile current" *ngIf="data.current as current">
+          <p>Aktuell</p>
+          <strong>{{ formatPrice(current.price_ct_kwh) }} ct/kWh</strong>
+          <span>Start: {{ formatLocalTime(current.ts) }}</span>
+        </article>
+
+        <article class="price-tile" *ngIf="data.next as next">
+          <p>Nächster Preis</p>
+          <strong>{{ formatPrice(next.price_ct_kwh) }} ct/kWh</strong>
+          <span>Ab {{ formatLocalTime(next.ts) }}</span>
+        </article>
+      </div>
+
+      <p class="updated-at">Zuletzt aktualisiert: {{ formatLocalDateTime(data.fetched_at) }}</p>
+
+      <div class="points-table" *ngIf="data.points.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>Zeit</th>
+              <th>Preis (ct/kWh)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let point of data.points | slice: 0 : 12">
+              <td>{{ formatLocalTime(point.ts) }}</td>
+              <td>{{ formatPrice(point.price_ct_kwh) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
