@@ -46,3 +46,94 @@ export interface WeatherPriceAnalysisStatusResponse {
   status: string;
   message?: string;
 }
+
+export interface WeatherPriceStatisticsByRunIdRequest {
+  analysis_run_id: number;
+}
+
+export interface WeatherPriceStatisticsSelectionRequest {
+  start_date: string;
+  end_date: string;
+  bidding_zone_id: number;
+  product_id?: number;
+  price_type?: string;
+  cities: WeatherPriceAnalysisCityWeight[];
+}
+
+export type WeatherPriceStatisticsRequest =
+  | WeatherPriceStatisticsByRunIdRequest
+  | WeatherPriceStatisticsSelectionRequest;
+
+export interface WeatherPriceStatisticsMeta {
+  source?: string;
+  analysis_run_id?: number;
+  start_date?: string;
+  end_date?: string;
+  observations?: number;
+  [key: string]: string | number | null | undefined;
+}
+
+export interface WeatherPriceDescriptiveStatistic {
+  mean: number | null;
+  median: number | null;
+  std: number | null;
+  min: number | null;
+  max: number | null;
+  count?: number | null;
+}
+
+export type WeatherPriceDescriptiveStatistics = Record<string, WeatherPriceDescriptiveStatistic>;
+
+export type WeatherPriceCorrelations = Record<string, number | null>;
+
+export type WeatherPriceCorrelationMatrix = Record<string, Record<string, number | null>>;
+
+export interface WeatherPriceBucketItem {
+  bucket: string;
+  count: number;
+  avg_price: number | null;
+  avg_weather?: number | null;
+}
+
+export type WeatherPriceBucketAnalysis = Record<string, WeatherPriceBucketItem[]>;
+
+export interface WeatherPriceScatterPoint {
+  ts_utc: string;
+  x: number | null;
+  y: number | null;
+}
+
+export type WeatherPriceScatterData = Record<string, WeatherPriceScatterPoint[]>;
+
+export interface WeatherPriceLagPoint {
+  lag: number;
+  value: number | null;
+}
+
+export type WeatherPriceLagAnalysis = Record<string, WeatherPriceLagPoint[]>;
+
+export interface WeatherPriceOutlier {
+  ts_utc: string;
+  metric: string;
+  value: number | null;
+  z_score?: number | null;
+}
+
+export interface WeatherPriceTrendLine {
+  slope: number | null;
+  intercept: number | null;
+  r2?: number | null;
+}
+
+export interface WeatherPriceStatisticsResponse {
+  meta: WeatherPriceStatisticsMeta;
+  descriptive_statistics: WeatherPriceDescriptiveStatistics;
+  correlations: WeatherPriceCorrelations;
+  correlation_matrix: WeatherPriceCorrelationMatrix;
+  bucket_analysis: WeatherPriceBucketAnalysis;
+  scatter_data: WeatherPriceScatterData;
+  lag_analysis: WeatherPriceLagAnalysis;
+  interpretation_hints: string[];
+  outliers?: WeatherPriceOutlier[];
+  trend_lines?: Record<string, WeatherPriceTrendLine>;
+}

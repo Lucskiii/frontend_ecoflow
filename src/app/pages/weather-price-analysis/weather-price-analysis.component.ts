@@ -17,12 +17,24 @@ import {
   WeatherPriceAnalysisDataPoint,
   WeatherPriceAnalysisRequest,
   WeatherPriceAnalysisResponse,
-  WeatherPriceAnalysisStatusResponse
+  WeatherPriceAnalysisStatusResponse,
+  WeatherPriceBucketItem,
+  WeatherPriceCorrelationMatrix,
+  WeatherPriceStatisticsRequest,
+  WeatherPriceStatisticsResponse
 } from '../../weather-price-analysis/weather-price-analysis.models';
 import {
   WeatherPriceAnalysisService,
-  mapWeatherPriceAnalysisError
+  mapWeatherPriceAnalysisError,
+  mapWeatherPriceStatisticsError
 } from '../../weather-price-analysis/weather-price-analysis.service';
+import {
+  buildStatisticsRequest,
+  formatStatisticValue,
+  hasStatisticsContent,
+  StatisticsCardViewModel,
+  toStatisticsCards
+} from '../../weather-price-analysis/weather-price-statistics.helpers';
 
 interface AnalysisChartLine {
   label: string;
@@ -34,6 +46,22 @@ interface AnalysisChartLine {
 interface AnalysisMetricOption {
   key: keyof WeatherPriceAnalysisDataPoint;
   label: string;
+  color: string;
+}
+
+interface CorrelationMatrixRow {
+  metric: string;
+  values: Array<{ metric: string; value: string }>;
+}
+
+interface ScatterPlotViewModel {
+  metric: string;
+  points: Array<{ ts_utc: string; cx: number; cy: number; x: string; y: string }>;
+}
+
+interface LagLineViewModel {
+  metric: string;
+  path: string;
   color: string;
 }
 
@@ -80,6 +108,10 @@ export class WeatherPriceAnalysisComponent implements OnInit {
     rename_run_name: ['']
   });
 
+  protected statisticsResult: WeatherPriceStatisticsResponse | null = null;
+  protected isStatisticsLoading = false;
+  protected statisticsErrorMessage = '';
+
   ngOnInit(): void {
     this.loadCities();
     this.addCity();
@@ -98,6 +130,106 @@ export class WeatherPriceAnalysisComponent implements OnInit {
     return control.touched && control.invalid;
   }
 
+  protected get statisticsCards(): StatisticsCardViewModel[] {
+    return toStatisticsCards(this.statisticsResult?.descriptive_statistics ?? {});
+  }
+
+  protected get hasStatisticsData(): boolean {
+    return hasStatisticsContent(this.statisticsResult);
+  }
+
+  protected get correlationEntries(): Array<{ metric: string; value: string }> {
+    const correlations = this.statisticsResult?.correlations ?? {};
+    return Object.entries(correlations).map(([metric, value]) => ({ metric, value: formatStatisticValue(value) }));
+  }
+
+  protected get correlationMatrixColumns(): string[] {
+    const matrix = this.statisticsResult?.correlation_matrix ?? {};
+    return this.getMatrixColumns(matrix);
+  }
+
+  protected get correlationMatrixRows(): CorrelationMatrixRow[] {
+    const matrix = this.statisticsResult?.correlation_matrix ?? {};
+    const columns = this.getMatrixColumns(matrix);
+    return Object.entries(matrix).map(([rowMetric, rowValues]) => ({
+      metric: rowMetric,
+      values: columns.map((columnMetric) => ({
+        metric: columnMetric,
+        value: formatStatisticValue(rowValues[columnMetric])
+      }))
+    }));
+  }
+
+  protected get bucketAnalysisEntries(): Array<{ metric: string; items: WeatherPriceBucketItem[] }> {
+    const bucketAnalysis = this.statisticsResult?.bucket_analysis ?? {};
+    return Object.entries(bucketAnalysis)
+      .filter(([, items]) => Array.isArray(items))
+      .map(([metric, items]) => ({ metric, items }));
+  }
+
+  protected get scatterPlots(): ScatterPlotViewModel[] {
+    const scatterData = this.statisticsResult?.scatter_data ?? {};
+    return Object.entries(scatterData)
+      .filter(([, points]) => Array.isArray(points) && points.length > 0)
+      .map(([metric, points]) => {
+        const valid = points.filter((point) => point.x !== null && point.y !== null);
+        if (!valid.length) {
+          return { metric, points: [] };
+        }
+
+        const xValues = valid.map((point) => Number(point.x));
+        const yValues = valid.map((point) => Number(point.y));
+        const minX = Math.min(...xValues);
+        const maxX = Math.max(...xValues);
+        const minY = Math.min(...yValues);
+        const maxY = Math.max(...yValues);
+        const xRange = Math.max(maxX - minX, 1);
+        const yRange = Math.max(maxY - minY, 1);
+
+        return {
+          metric,
+          points: valid.map((point) => ({
+            ts_utc: point.ts_utc,
+            x: formatStatisticValue(point.x),
+            y: formatStatisticValue(point.y),
+            cx: ((Number(point.x) - minX) / xRange) * 240,
+            cy: 140 - ((Number(point.y) - minY) / yRange) * 140
+          }))
+        };
+      });
+  }
+
+  protected get lagLines(): LagLineViewModel[] {
+    const lagAnalysis = this.statisticsResult?.lag_analysis ?? {};
+    const colors = ['#ef4444', '#3b82f6', '#8b5cf6', '#22c55e', '#f97316'];
+
+    return Object.entries(lagAnalysis)
+      .filter(([, points]) => Array.isArray(points) && points.length > 0)
+      .map(([metric, points], index) => {
+        const validPoints = points.filter((point) => point.value !== null);
+        if (!validPoints.length) {
+          return { metric, path: '', color: colors[index % colors.length] };
+        }
+
+        const minValue = Math.min(...validPoints.map((point) => Number(point.value)));
+        const maxValue = Math.max(...validPoints.map((point) => Number(point.value)));
+        const valueRange = Math.max(maxValue - minValue, 1);
+
+        const path = validPoints
+          .map((point, pointIndex) => {
+            const x = (point.lag / 3) * 300;
+            const y = 120 - ((Number(point.value) - minValue) / valueRange) * 120;
+            return `${pointIndex === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
+          })
+          .join(' ');
+
+        return {
+          metric,
+          path,
+          color: colors[index % colors.length]
+        };
+      });
+  }
 
   protected citySelectionInvalid(index: number): boolean {
     const control = this.citiesControls[index]?.controls['analysis_city_id'];
@@ -129,7 +261,6 @@ export class WeatherPriceAnalysisComponent implements OnInit {
     return city ? `${city.city_name} (${city.country_code || city.country_name})` : `City #${cityId}`;
   }
 
-
   protected normalizedWeightForCity(cityId: number): string {
     if (!this.result) {
       return '-';
@@ -140,6 +271,7 @@ export class WeatherPriceAnalysisComponent implements OnInit {
       ? String(this.result.normalized_weights[key])
       : '-';
   }
+
   protected submit(): void {
     if (this.form.invalid || this.isSubmitting) {
       this.form.markAllAsTouched();
@@ -173,6 +305,39 @@ export class WeatherPriceAnalysisComponent implements OnInit {
           this.errorMessage = mapWeatherPriceAnalysisError(error);
         }
       });
+  }
+
+  protected computeStatistics(): void {
+    if (this.isStatisticsLoading) {
+      return;
+    }
+
+    const requestPayload = this.buildStatisticsPayload();
+    if (!requestPayload) {
+      this.statisticsErrorMessage =
+        'Bitte entweder eine numerische analysis_run_id angeben oder eine gültige aktuelle Auswahl ausfüllen.';
+      return;
+    }
+
+    this.isStatisticsLoading = true;
+    this.statisticsErrorMessage = '';
+
+    this.weatherPriceAnalysisService
+      .computeStatistics(requestPayload)
+      .pipe(finalize(() => (this.isStatisticsLoading = false)))
+      .subscribe({
+        next: (response) => {
+          this.statisticsResult = response;
+        },
+        error: (error: unknown) => {
+          this.statisticsResult = null;
+          this.statisticsErrorMessage = mapWeatherPriceStatisticsError(error);
+        }
+      });
+  }
+
+  protected formatValue(value: number | null | undefined): string {
+    return formatStatisticValue(value);
   }
 
   protected onChartMetricChange(metric: string): void {
@@ -209,7 +374,27 @@ export class WeatherPriceAnalysisComponent implements OnInit {
     };
   }
 
+  private buildStatisticsPayload(): WeatherPriceStatisticsRequest | null {
+    const analysisRunIdRaw = this.loadForm.controls.analysis_run_id.value;
+    if (!analysisRunIdRaw.trim() && this.form.invalid) {
+      this.form.markAllAsTouched();
+      return null;
+    }
 
+    const formValue = this.form.getRawValue();
+    return buildStatisticsRequest({
+      analysisRunIdRaw,
+      start_date: formValue.start_date,
+      end_date: formValue.end_date,
+      bidding_zone_id: Number(formValue.bidding_zone_id),
+      product_id: formValue.product_id,
+      price_type: formValue.price_type,
+      cities: formValue.cities.map((city) => ({
+        analysis_city_id: Number(city['analysis_city_id']),
+        weight: Number(city['weight'])
+      }))
+    });
+  }
 
   protected loadExistingAnalysis(): void {
     const analysisRunId = this.loadForm.controls.analysis_run_id.value.trim();
@@ -301,6 +486,7 @@ export class WeatherPriceAnalysisComponent implements OnInit {
         }
       });
   }
+
   private loadCities(): void {
     this.isLoadingCities = true;
 
@@ -375,5 +561,11 @@ export class WeatherPriceAnalysisComponent implements OnInit {
         hasData: line.values.length > 0
       };
     });
+  }
+
+  private getMatrixColumns(matrix: WeatherPriceCorrelationMatrix): string[] {
+    const rowKeys = Object.keys(matrix);
+    const colKeys = rowKeys.flatMap((key) => Object.keys(matrix[key] ?? {}));
+    return Array.from(new Set([...rowKeys, ...colKeys]));
   }
 }
