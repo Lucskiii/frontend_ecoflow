@@ -13,12 +13,26 @@ export interface StatisticsCardViewModel {
   max: string;
 }
 
-export function formatStatisticValue(value: number | null | undefined): string {
-  if (value === null || value === undefined || Number.isNaN(value)) {
+export function formatStatisticValue(value: unknown): string {
+  if (value === null || value === undefined) {
     return 'n/a';
   }
 
-  return value.toFixed(2);
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value.toFixed(2) : 'n/a';
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return 'n/a';
+    }
+
+    const numeric = Number(trimmed);
+    return Number.isFinite(numeric) ? numeric.toFixed(2) : trimmed;
+  }
+
+  return 'n/a';
 }
 
 export function toStatisticsCards(stats: WeatherPriceDescriptiveStatistics): StatisticsCardViewModel[] {
