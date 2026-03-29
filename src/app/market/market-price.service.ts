@@ -6,7 +6,7 @@ import { MarketPriceResponse } from './market.models';
 @Injectable({ providedIn: 'root' })
 export class MarketPriceService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = '/api/market/prices';
+  private readonly baseUrl = 'http://localhost:8000/api/market/prices';
 
   getPrices(from: string, to: string): Observable<MarketPriceResponse> {
     const params = new HttpParams().set('from', from).set('to', to);
