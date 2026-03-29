@@ -172,13 +172,21 @@ export class WeatherPriceAnalysisComponent implements OnInit {
     return Object.entries(scatterData)
       .filter(([, points]) => Array.isArray(points) && points.length > 0)
       .map(([metric, points]) => {
-        const valid = points.filter((point) => point.x !== null && point.y !== null);
+        const valid = points
+          .map((point) => ({
+            ts_utc: point.ts_utc,
+            x: this.toFiniteNumber(point.x),
+            y: this.toFiniteNumber(point.y)
+          }))
+          .filter(
+            (point): point is { ts_utc: string; x: number; y: number } => point.x !== null && point.y !== null
+          );
         if (!valid.length) {
           return { metric, points: [] };
         }
 
-        const xValues = valid.map((point) => Number(point.x));
-        const yValues = valid.map((point) => Number(point.y));
+        const xValues = valid.map((point) => point.x);
+        const yValues = valid.map((point) => point.y);
         const minX = Math.min(...xValues);
         const maxX = Math.max(...xValues);
         const minY = Math.min(...yValues);
@@ -192,8 +200,8 @@ export class WeatherPriceAnalysisComponent implements OnInit {
             ts_utc: point.ts_utc,
             x: formatStatisticValue(point.x),
             y: formatStatisticValue(point.y),
-            cx: ((Number(point.x) - minX) / xRange) * 240,
-            cy: 140 - ((Number(point.y) - minY) / yRange) * 140
+            cx: ((point.x - minX) / xRange) * 240,
+            cy: 140 - ((point.y - minY) / yRange) * 140
           }))
         };
       });
@@ -206,19 +214,21 @@ export class WeatherPriceAnalysisComponent implements OnInit {
     return Object.entries(lagAnalysis)
       .filter(([, points]) => Array.isArray(points) && points.length > 0)
       .map(([metric, points], index) => {
-        const validPoints = points.filter((point) => point.value !== null);
+        const validPoints = points
+          .map((point) => ({ lag: this.toFiniteNumber(point.lag), value: this.toFiniteNumber(point.value) }))
+          .filter((point): point is { lag: number; value: number } => point.lag !== null && point.value !== null);
         if (!validPoints.length) {
           return { metric, path: '', color: colors[index % colors.length] };
         }
 
-        const minValue = Math.min(...validPoints.map((point) => Number(point.value)));
-        const maxValue = Math.max(...validPoints.map((point) => Number(point.value)));
+        const minValue = Math.min(...validPoints.map((point) => point.value));
+        const maxValue = Math.max(...validPoints.map((point) => point.value));
         const valueRange = Math.max(maxValue - minValue, 1);
 
         const path = validPoints
           .map((point, pointIndex) => {
             const x = (point.lag / 3) * 300;
-            const y = 120 - ((Number(point.value) - minValue) / valueRange) * 120;
+            const y = 120 - ((point.value - minValue) / valueRange) * 120;
             return `${pointIndex === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
           })
           .join(' ');
@@ -335,7 +345,7 @@ export class WeatherPriceAnalysisComponent implements OnInit {
       });
   }
 
-  protected formatValue(value: number | null | undefined): string {
+  protected formatValue(value: unknown): string {
     return formatStatisticValue(value);
   }
 
@@ -566,5 +576,10 @@ export class WeatherPriceAnalysisComponent implements OnInit {
     const rowKeys = Object.keys(matrix);
     const colKeys = rowKeys.flatMap((key) => Object.keys(matrix[key] ?? {}));
     return Array.from(new Set([...rowKeys, ...colKeys]));
+  }
+
+  private toFiniteNumber(value: unknown): number | null {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? numericValue : null;
   }
 }
