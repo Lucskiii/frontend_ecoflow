@@ -64,7 +64,8 @@
               "buildTarget": "frontend_ecoflow:build:production"
             },
             "development": {
-              "buildTarget": "frontend_ecoflow:build:development"
+              "buildTarget": "frontend_ecoflow:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"
