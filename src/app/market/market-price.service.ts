@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import {
@@ -8,6 +8,7 @@ import {
   LiveMarketPriceResponse,
   MarketPriceResponse
 } from './market.models';
+import { SKIP_AUTH } from '../auth/auth.interceptor';
 
 const EUR_MWH_TO_CT_KWH = 0.1;
 
@@ -53,8 +54,10 @@ export class MarketPriceService {
       .set('lookback_hours', lookbackHours)
       .set('lookahead_hours', lookaheadHours);
 
+    const context = new HttpContext().set(SKIP_AUTH, true);
+
     return this.http
-      .get<LiveMarketPriceApiResponse>(`${this.baseUrl}/live`, { params })
+      .get<LiveMarketPriceApiResponse>(`${this.baseUrl}/live`, { params, context })
       .pipe(map((response) => mapLiveMarketPriceResponse(response)));
   }
 }
