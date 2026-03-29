@@ -173,4 +173,46 @@ describe('WeatherPriceAnalysisComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Zu wenig Daten');
   });
+
+  it('ignores non-numeric lag/scatter values without producing NaN svg paths', () => {
+    weatherPriceServiceMock.computeStatistics.and.returnValue(
+      of({
+        meta: { observations: 3 },
+        descriptive_statistics: {},
+        correlations: {},
+        correlation_matrix: {},
+        bucket_analysis: {},
+        scatter_data: {
+          temp_vs_price: [
+            { ts_utc: '2026-03-01T00:00:00Z', x: 'n/a', y: 80 },
+            { ts_utc: '2026-03-01T01:00:00Z', x: 5, y: 'bad' },
+            { ts_utc: '2026-03-01T02:00:00Z', x: 6, y: 82 }
+          ]
+        },
+        lag_analysis: {
+          temp: [
+            { lag: 0, value: '-0.45' },
+            { lag: 1, value: 'NaN' },
+            { lag: 2, value: -0.3 }
+          ]
+        },
+        interpretation_hints: []
+      })
+    );
+
+    (component as any).form.controls.cities.at(0).patchValue({ analysis_city_id: 1, weight: 1 });
+    (component as any).form.patchValue({
+      bidding_zone_id: 10,
+      start_date: '2026-03-01',
+      end_date: '2026-03-03',
+      price_type: 'spot'
+    });
+
+    (component as any).computeStatistics();
+    fixture.detectChanges();
+
+    const lagLines = (component as any).lagLines as Array<{ path: string }>;
+    expect(lagLines.length).toBeGreaterThan(0);
+    expect(lagLines[0].path.includes('NaN')).toBeFalse();
+  });
 });

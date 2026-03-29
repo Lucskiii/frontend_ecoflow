@@ -25,12 +25,12 @@ export function formatStatisticValue(value: unknown): string {
     }
 
     const numericFromString = Number(trimmed);
-    return Number.isFinite(numericFromString) ? numericFromString.toFixed(2) : trimmed;
+    return Number.isFinite(numericFromString) ? toFixedSafe(numericFromString) : trimmed;
   }
 
   const numericValue = Number(value);
   if (Number.isFinite(numericValue)) {
-    return numericValue.toFixed(2);
+    return toFixedSafe(numericValue);
   }
 
   return 'n/a';
@@ -72,9 +72,13 @@ export function buildStatisticsRequest(params: {
   price_type: string;
   cities: Array<{ analysis_city_id: number; weight: number }>;
 }): WeatherPriceStatisticsRequest {
-  const analysisRunId = Number(params.analysisRunIdRaw);
-  if (params.analysisRunIdRaw.trim() && Number.isFinite(analysisRunId) && analysisRunId > 0) {
-    return { analysis_run_id: analysisRunId };
+  const analysisRunId = params.analysisRunIdRaw.trim();
+  if (analysisRunId) {
+    const numericAnalysisRunId = Number(analysisRunId);
+    return {
+      analysis_run_id:
+        Number.isFinite(numericAnalysisRunId) && numericAnalysisRunId > 0 ? numericAnalysisRunId : analysisRunId
+    };
   }
 
   const productIdNum = Number(params.product_id);
@@ -90,4 +94,12 @@ export function buildStatisticsRequest(params: {
       weight: Number(city.weight)
     }))
   };
+}
+
+function toFixedSafe(value: number): string {
+  return (Math.round(value * 100) / 100).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: false
+  });
 }
