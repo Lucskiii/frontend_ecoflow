@@ -314,8 +314,7 @@ export class WeatherPriceAnalysisComponent implements OnInit {
 
     const requestPayload = this.buildStatisticsPayload();
     if (!requestPayload) {
-      this.statisticsErrorMessage =
-        'Bitte entweder eine numerische analysis_run_id angeben oder eine gültige aktuelle Auswahl ausfüllen.';
+      this.statisticsErrorMessage = 'Bitte eine analysis_run_id angeben oder eine gültige aktuelle Auswahl ausfüllen.';
       return;
     }
 
