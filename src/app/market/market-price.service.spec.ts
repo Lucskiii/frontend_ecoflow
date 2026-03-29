@@ -63,7 +63,7 @@ describe('MarketPriceService', () => {
     });
 
     const request = httpMock.expectOne(
-      'http://localhost:8000/api/market/prices/live?lookback_hours=3&lookahead_hours=36'
+      '/api/market/prices/live?lookback_hours=3&lookahead_hours=36'
     );
     expect(request.request.method).toBe('GET');
 
