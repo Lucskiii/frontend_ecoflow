@@ -2,7 +2,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { WeatherPriceAnalysisService, mapWeatherPriceAnalysisError } from './weather-price-analysis.service';
+import {
+  WeatherPriceAnalysisService,
+  mapWeatherPriceAnalysisError,
+  mapWeatherPriceStatisticsError
+} from './weather-price-analysis.service';
 
 describe('WeatherPriceAnalysisService', () => {
   let service: WeatherPriceAnalysisService;
@@ -62,6 +66,24 @@ describe('WeatherPriceAnalysisService', () => {
     expect(request.request.body).toEqual({ run_name: 'Mein Lauf' });
     request.flush({ analysis_run_id: 'run-2', run_name: 'Mein Lauf', status: 'renamed' });
   });
+
+  it('sends POST /api/analysis/weather-price/statistics with run id payload', () => {
+    service.computeStatistics({ analysis_run_id: 42 }).subscribe();
+
+    const request = httpMock.expectOne('http://localhost:8000/api/analysis/weather-price/statistics');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ analysis_run_id: 42 });
+    request.flush({
+      meta: {},
+      descriptive_statistics: {},
+      correlations: {},
+      correlation_matrix: {},
+      bucket_analysis: {},
+      scatter_data: {},
+      lag_analysis: {},
+      interpretation_hints: []
+    });
+  });
 });
 
 describe('mapWeatherPriceAnalysisError', () => {
@@ -90,5 +112,22 @@ describe('mapWeatherPriceAnalysisError', () => {
   it('maps 503 to upstream message', () => {
     const mapped = mapWeatherPriceAnalysisError(new HttpErrorResponse({ status: 503 }));
     expect(mapped).toBe('Weather-Daten sind aktuell nicht verfügbar (Upstream-Service nicht erreichbar).');
+  });
+});
+
+describe('mapWeatherPriceStatisticsError', () => {
+  it('maps 400 error', () => {
+    const mapped = mapWeatherPriceStatisticsError(new HttpErrorResponse({ status: 400 }));
+    expect(mapped).toContain('Ungültige Eingabe');
+  });
+
+  it('maps 404 error', () => {
+    const mapped = mapWeatherPriceStatisticsError(new HttpErrorResponse({ status: 404 }));
+    expect(mapped).toContain('nicht gefunden');
+  });
+
+  it('maps 422 error', () => {
+    const mapped = mapWeatherPriceStatisticsError(new HttpErrorResponse({ status: 422 }));
+    expect(mapped).toContain('Zu wenig Daten');
   });
 });
