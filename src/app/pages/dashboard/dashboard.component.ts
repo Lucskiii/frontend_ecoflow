@@ -5,7 +5,6 @@ import { finalize } from 'rxjs';
 import { AuthService, CustomerProfile } from '../../auth/auth.service';
 import { EnergyPeriod, EnergySeries, EnergySummary, EnergyTimeseriesResponse } from '../../energy/energy.models';
 import { EnergyService } from '../../energy/energy.service';
-import { LiveMarketPriceComponent } from '../../market/live-market-price.component';
 
 interface ChartLine {
   key: string;
@@ -17,7 +16,7 @@ interface ChartLine {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, RouterLink, LiveMarketPriceComponent],
+  imports: [CommonModule, RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
