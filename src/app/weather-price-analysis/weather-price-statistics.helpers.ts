@@ -18,18 +18,19 @@ export function formatStatisticValue(value: unknown): string {
     return 'n/a';
   }
 
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value.toFixed(2) : 'n/a';
-  }
-
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!trimmed) {
       return 'n/a';
     }
 
-    const numeric = Number(trimmed);
-    return Number.isFinite(numeric) ? numeric.toFixed(2) : trimmed;
+    const numericFromString = Number(trimmed);
+    return Number.isFinite(numericFromString) ? numericFromString.toFixed(2) : trimmed;
+  }
+
+  const numericValue = Number(value);
+  if (Number.isFinite(numericValue)) {
+    return numericValue.toFixed(2);
   }
 
   return 'n/a';

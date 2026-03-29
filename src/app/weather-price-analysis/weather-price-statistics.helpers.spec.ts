@@ -20,6 +20,11 @@ describe('weather-price-statistics.helpers', () => {
     expect(formatStatisticValue('n/a')).toBe('n/a');
   });
 
+  it('handles Number objects and unknown types safely', () => {
+    expect(formatStatisticValue(new Number(2.5))).toBe('2.50');
+    expect(formatStatisticValue({})).toBe('n/a');
+  });
+
   it('maps descriptive stats to cards', () => {
     const cards = toStatisticsCards({
       price_eur_mwh: { mean: 2, median: 3, std: 4, min: 1, max: 5 }
