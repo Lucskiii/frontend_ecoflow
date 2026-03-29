@@ -48,7 +48,7 @@ export interface WeatherPriceAnalysisStatusResponse {
 }
 
 export interface WeatherPriceStatisticsByRunIdRequest {
-  analysis_run_id: number;
+  analysis_run_id: string | number;
 }
 
 export interface WeatherPriceStatisticsSelectionRequest {
@@ -66,7 +66,7 @@ export type WeatherPriceStatisticsRequest =
 
 export interface WeatherPriceStatisticsMeta {
   source?: string;
-  analysis_run_id?: number;
+  analysis_run_id?: string | number;
   start_date?: string;
   end_date?: string;
   observations?: number;

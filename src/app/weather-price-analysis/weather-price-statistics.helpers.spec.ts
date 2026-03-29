@@ -48,6 +48,20 @@ describe('weather-price-statistics.helpers', () => {
     expect(payload).toEqual({ analysis_run_id: 123 });
   });
 
+  it('builds run-id statistics request when analysis_run_id is non-numeric', () => {
+    const payload = buildStatisticsRequest({
+      analysisRunIdRaw: '4b20bc72-d71d-4f90-8f9f-c1226ab20f53',
+      start_date: '2026-01-01',
+      end_date: '2026-01-03',
+      bidding_zone_id: 10,
+      product_id: '',
+      price_type: 'spot',
+      cities: [{ analysis_city_id: 1, weight: 1 }]
+    });
+
+    expect(payload).toEqual({ analysis_run_id: '4b20bc72-d71d-4f90-8f9f-c1226ab20f53' });
+  });
+
   it('builds raw selection payload when analysis_run_id is missing', () => {
     const payload = buildStatisticsRequest({
       analysisRunIdRaw: '',
