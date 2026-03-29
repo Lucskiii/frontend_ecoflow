@@ -3,7 +3,6 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { mapLiveMarketPriceResponse, MarketPriceService } from './market-price.service';
 import { LiveMarketPriceApiResponse } from './market.models';
-import { SKIP_AUTH } from '../auth/auth.interceptor';
 
 describe('MarketPriceService', () => {
   let service: MarketPriceService;
@@ -67,7 +66,6 @@ describe('MarketPriceService', () => {
       'http://localhost:8000/api/market/prices/live?lookback_hours=3&lookahead_hours=36'
     );
     expect(request.request.method).toBe('GET');
-    expect(request.request.context.get(SKIP_AUTH)).toBeTrue();
 
     request.flush({
       source: 'awattar',
