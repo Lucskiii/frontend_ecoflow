@@ -5,7 +5,9 @@ import {
   WeatherPriceAnalysisRenameRequest,
   WeatherPriceAnalysisRequest,
   WeatherPriceAnalysisResponse,
-  WeatherPriceAnalysisStatusResponse
+  WeatherPriceAnalysisStatusResponse,
+  WeatherPriceStatisticsRequest,
+  WeatherPriceStatisticsResponse
 } from './weather-price-analysis.models';
 
 @Injectable({ providedIn: 'root' })
@@ -27,6 +29,10 @@ export class WeatherPriceAnalysisService {
 
   renameAnalysisRun(analysisRunId: string, payload: WeatherPriceAnalysisRenameRequest): Observable<WeatherPriceAnalysisStatusResponse> {
     return this.http.patch<WeatherPriceAnalysisStatusResponse>(`${this.baseUrl}/${analysisRunId}/name`, payload);
+  }
+
+  computeStatistics(payload: WeatherPriceStatisticsRequest): Observable<WeatherPriceStatisticsResponse> {
+    return this.http.post<WeatherPriceStatisticsResponse>(`${this.baseUrl}/statistics`, payload);
   }
 }
 
@@ -64,4 +70,29 @@ export function mapWeatherPriceAnalysisError(error: unknown): string {
   }
 
   return 'Analyse fehlgeschlagen. Bitte erneut versuchen.';
+}
+
+export function mapWeatherPriceStatisticsError(error: unknown): string {
+  if (!(error instanceof HttpErrorResponse)) {
+    return 'Statistische Analyse fehlgeschlagen. Bitte erneut versuchen.';
+  }
+
+  const detail =
+    error.error && typeof error.error === 'object' && 'detail' in error.error
+      ? String((error.error as { detail?: unknown }).detail ?? '')
+      : '';
+
+  if (error.status === 400) {
+    return detail || 'Ungültige Eingabe für Statistical Insights.';
+  }
+
+  if (error.status === 404) {
+    return detail || 'Analyse-Run oder Daten wurden nicht gefunden.';
+  }
+
+  if (error.status === 422) {
+    return detail || 'Zu wenig Daten für statistische Auswertungen.';
+  }
+
+  return detail || 'Statistische Analyse fehlgeschlagen. Bitte erneut versuchen.';
 }
