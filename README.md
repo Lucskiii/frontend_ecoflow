@@ -57,3 +57,56 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Weather Price Statistics Endpoint
+
+The frontend now integrates `POST /api/analysis/weather-price/statistics` via `WeatherPriceAnalysisService.computeStatistics()`.
+
+### Supported request modes
+
+1. **By existing run id**
+
+```json
+{ "analysis_run_id": 123 }
+```
+
+2. **By raw selection payload**
+
+```json
+{
+  "start_date": "2026-03-01",
+  "end_date": "2026-03-07",
+  "bidding_zone_id": 10,
+  "product_id": 77,
+  "price_type": "spot",
+  "cities": [{ "analysis_city_id": 1, "weight": 0.7 }]
+}
+```
+
+### Expected response blocks
+
+The response model supports these top-level keys:
+
+- `meta`
+- `descriptive_statistics`
+- `correlations`
+- `correlation_matrix`
+- `bucket_analysis`
+- `scatter_data`
+- `lag_analysis`
+- `interpretation_hints`
+- optional: `outliers`
+- optional: `trend_lines`
+
+### Rendered visualizations
+
+In the **Statistical Insights** section, the UI renders:
+
+- KPI stats cards (mean/median/std/min/max)
+- correlation widget
+- correlation matrix table
+- bucket analysis tables
+- scatter plots with tooltip (`ts_utc`, `x`, `y`)
+- lag analysis line chart for lags `0..3`
+- interpretation hints list
+- optional outlier and trend-line lists

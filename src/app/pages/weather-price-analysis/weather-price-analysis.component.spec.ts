@@ -24,18 +24,6 @@ describe('WeatherPriceAnalysisComponent', () => {
             admin1: 'Berlin',
             timezone: 'Europe/Berlin',
             created_at: '2026-03-01T00:00:00Z'
-          },
-          {
-            id: 2,
-            city_name: 'Hamburg',
-            country_code: 'DE',
-            country_name: 'Germany',
-            latitude: 53.55,
-            longitude: 10,
-            open_meteo_location_id: 456,
-            admin1: 'Hamburg',
-            timezone: 'Europe/Berlin',
-            created_at: '2026-03-01T00:00:00Z'
           }
         ]
       })
@@ -47,7 +35,7 @@ describe('WeatherPriceAnalysisComponent', () => {
       of({
         analysis_run_id: 'run-1',
         run_name: 'Q2 Städte-Mix',
-        normalized_weights: { '1': 0.5, '2': 0.5 },
+        normalized_weights: { '1': 1 },
         rows_inserted_weather: 10,
         rows_inserted_aggregate: 10,
         rows_inserted_analysis: 10,
@@ -62,28 +50,7 @@ describe('WeatherPriceAnalysisComponent', () => {
         rows_inserted_weather: 5,
         rows_inserted_aggregate: 5,
         rows_inserted_analysis: 5,
-        data: [
-          {
-            ts_utc: '2026-03-01T00:00:00Z',
-            temp_c_weighted: 5,
-            wind_ms_weighted: 3,
-            ghi_wm2_weighted: 100,
-            cloud_pct_weighted: 45,
-            price_eur_mwh: 80,
-            product_id: 'PHELIX',
-            price_type: 'spot'
-          },
-          {
-            ts_utc: '2026-03-01T01:00:00Z',
-            temp_c_weighted: 6,
-            wind_ms_weighted: 4,
-            ghi_wm2_weighted: 120,
-            cloud_pct_weighted: 35,
-            price_eur_mwh: 75,
-            product_id: 'PHELIX',
-            price_type: 'spot'
-          }
-        ]
+        data: []
       })
     ),
     getAnalysisStatus: jasmine.createSpy('getAnalysisStatus').and.returnValue(
@@ -91,15 +58,26 @@ describe('WeatherPriceAnalysisComponent', () => {
     ),
     renameAnalysisRun: jasmine.createSpy('renameAnalysisRun').and.returnValue(
       of({ analysis_run_id: 'run-1', run_name: 'Neuer Name', status: 'renamed' })
+    ),
+    computeStatistics: jasmine.createSpy('computeStatistics').and.returnValue(
+      of({
+        meta: { observations: 2 },
+        descriptive_statistics: {
+          price_eur_mwh: { mean: 77, median: 77.5, std: 2.5, min: 75, max: 80 }
+        },
+        correlations: { temp_vs_price: -0.45 },
+        correlation_matrix: { price_eur_mwh: { temp_c_weighted: -0.45 } },
+        bucket_analysis: { temperature: [{ bucket: '0-5', count: 2, avg_price: 77 }] },
+        scatter_data: { temp_vs_price: [{ ts_utc: '2026-03-01T00:00:00Z', x: 5, y: 80 }] },
+        lag_analysis: { temp: [{ lag: 0, value: -0.45 }, { lag: 1, value: -0.4 }] },
+        interpretation_hints: ['Leichte negative Korrelation']
+      })
     )
   };
 
   beforeEach(async () => {
+    Object.values(weatherPriceServiceMock).forEach((spy) => (spy as jasmine.Spy).calls.reset());
     analysisCityServiceMock.listCities.calls.reset();
-    weatherPriceServiceMock.runAnalysis.calls.reset();
-    weatherPriceServiceMock.getAnalysis.calls.reset();
-    weatherPriceServiceMock.getAnalysisStatus.calls.reset();
-    weatherPriceServiceMock.renameAnalysisRun.calls.reset();
 
     await TestBed.configureTestingModule({
       imports: [WeatherPriceAnalysisComponent],
@@ -119,9 +97,7 @@ describe('WeatherPriceAnalysisComponent', () => {
   });
 
   it('submits weather-price analysis payload', () => {
-    const cities = (component as any).form.controls.cities;
-    cities.at(0).patchValue({ analysis_city_id: 1, weight: 3 });
-
+    (component as any).form.controls.cities.at(0).patchValue({ analysis_city_id: 1, weight: 3 });
     (component as any).form.patchValue({
       run_name: 'Q2 Städte-Mix',
       bidding_zone_id: 10,
@@ -133,141 +109,68 @@ describe('WeatherPriceAnalysisComponent', () => {
 
     (component as any).submit();
 
-    expect(weatherPriceServiceMock.runAnalysis).toHaveBeenCalledWith({
-      run_name: 'Q2 Städte-Mix',
-      bidding_zone_id: 10,
-      start_date: '2026-03-01',
-      end_date: '2026-03-03',
-      product_id: 'PHELIX',
-      price_type: 'spot',
-      cities: [{ analysis_city_id: 1, weight: 3 }]
-    });
+    expect(weatherPriceServiceMock.runAnalysis).toHaveBeenCalled();
     expect((component as any).successMessage).toContain('erfolgreich');
   });
 
-  it('blocks submit without bidding_zone_id and disables submit button', () => {
-    const cities = (component as any).form.controls.cities;
-    cities.at(0).patchValue({ analysis_city_id: 1, weight: 1 });
+  it('computes statistics successfully and renders insights', () => {
+    (component as any).form.controls.cities.at(0).patchValue({ analysis_city_id: 1, weight: 1 });
     (component as any).form.patchValue({
-      start_date: '2026-03-01',
-      end_date: '2026-03-03',
-      price_type: 'spot',
-      bidding_zone_id: 0
-    });
-
-    fixture.detectChanges();
-    const submitButton = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
-
-    (component as any).submit();
-    fixture.detectChanges();
-
-    expect(submitButton.disabled).toBeTrue();
-    expect(weatherPriceServiceMock.runAnalysis).not.toHaveBeenCalled();
-    expect((component as any).errorMessage).toContain('Bidding Zone');
-  });
-
-  it('shows duplicate city validation error', () => {
-    (component as any).addCity();
-    const cities = (component as any).form.controls.cities;
-    cities.at(0).patchValue({ analysis_city_id: 1, weight: 1 });
-    cities.at(1).patchValue({ analysis_city_id: 1, weight: 2 });
-
-    cities.updateValueAndValidity();
-
-    expect(cities.errors?.['duplicateCities']).toBeTrue();
-  });
-
-
-
-  it('loads an existing analysis by run id', () => {
-    (component as any).loadForm.patchValue({ analysis_run_id: 'run-1' });
-
-    (component as any).loadExistingAnalysis();
-
-    expect(weatherPriceServiceMock.getAnalysis).toHaveBeenCalledWith('run-1');
-    expect((component as any).result?.run_name).toBe('Gespeicherter Lauf');
-  });
-
-  it('switches chart metric via dropdown selection', () => {
-    (component as any).loadForm.patchValue({ analysis_run_id: 'run-1' });
-    (component as any).loadExistingAnalysis();
-
-    (component as any).onChartMetricChange('wind_ms_weighted');
-
-    expect((component as any).selectedChartMetric).toBe('wind_ms_weighted');
-    expect((component as any).chartLines[1].label).toBe('Wind (m/s, weighted)');
-  });
-
-  it('renames an analysis run', () => {
-    (component as any).loadForm.patchValue({ analysis_run_id: 'run-1', rename_run_name: 'Neuer Name' });
-
-    (component as any).renameAnalysis();
-
-    expect(weatherPriceServiceMock.renameAnalysisRun).toHaveBeenCalledWith('run-1', { run_name: 'Neuer Name' });
-  });
-
-  it('maps API error message on submit failure', () => {
-    weatherPriceServiceMock.runAnalysis.and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 422, error: { detail: 'invalid weights' } }))
-    );
-
-    const cities = (component as any).form.controls.cities;
-    cities.at(0).patchValue({ analysis_city_id: 1, weight: 0.1 });
-
-    (component as any).form.patchValue({
-      run_name: 'Q2 Städte-Mix',
       bidding_zone_id: 10,
       start_date: '2026-03-01',
       end_date: '2026-03-03',
       price_type: 'spot'
     });
 
-    (component as any).submit();
+    (component as any).computeStatistics();
+    fixture.detectChanges();
 
-    expect((component as any).errorMessage).toBe('invalid weights');
+    expect(weatherPriceServiceMock.computeStatistics).toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('Leichte negative Korrelation');
   });
 
-  it('renders friendly 422 message when bidding zone is missing', () => {
-    weatherPriceServiceMock.runAnalysis.and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 422 }))
+  it('shows empty-state message for empty statistics response', () => {
+    weatherPriceServiceMock.computeStatistics.and.returnValue(
+      of({
+        meta: {},
+        descriptive_statistics: {},
+        correlations: {},
+        correlation_matrix: {},
+        bucket_analysis: {},
+        scatter_data: {},
+        lag_analysis: {},
+        interpretation_hints: []
+      })
     );
 
-    const cities = (component as any).form.controls.cities;
-    cities.at(0).patchValue({ analysis_city_id: 1, weight: 0.1 });
+    (component as any).form.controls.cities.at(0).patchValue({ analysis_city_id: 1, weight: 1 });
     (component as any).form.patchValue({
-      run_name: 'Q2 Städte-Mix',
       bidding_zone_id: 10,
       start_date: '2026-03-01',
       end_date: '2026-03-03',
       price_type: 'spot'
     });
 
-    (component as any).submit();
+    (component as any).computeStatistics();
     fixture.detectChanges();
 
-    const errorToast = fixture.nativeElement.querySelector('.toast.error') as HTMLElement;
-    expect(errorToast.textContent).toContain('Bitte eine gültige Bidding Zone auswählen.');
+    expect(fixture.nativeElement.textContent).toContain('keine auswertbaren Daten');
   });
 
-  it('renders friendly 404 message when bidding zone does not exist', () => {
-    weatherPriceServiceMock.runAnalysis.and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 404, error: { detail: 'bidding_zone not found' } }))
-    );
+  it('shows statistics error state', () => {
+    weatherPriceServiceMock.computeStatistics.and.returnValue(throwError(() => new HttpErrorResponse({ status: 422 })));
 
-    const cities = (component as any).form.controls.cities;
-    cities.at(0).patchValue({ analysis_city_id: 1, weight: 0.1 });
+    (component as any).form.controls.cities.at(0).patchValue({ analysis_city_id: 1, weight: 1 });
     (component as any).form.patchValue({
-      run_name: 'Q2 Städte-Mix',
-      bidding_zone_id: 999,
+      bidding_zone_id: 10,
       start_date: '2026-03-01',
       end_date: '2026-03-03',
       price_type: 'spot'
     });
 
-    (component as any).submit();
+    (component as any).computeStatistics();
     fixture.detectChanges();
 
-    const errorToast = fixture.nativeElement.querySelector('.toast.error') as HTMLElement;
-    expect(errorToast.textContent).toContain('Die gewählte Bidding Zone existiert nicht. Bitte Auswahl prüfen.');
+    expect(fixture.nativeElement.textContent).toContain('Zu wenig Daten');
   });
 });

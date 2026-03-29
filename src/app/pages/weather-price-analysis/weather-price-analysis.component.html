@@ -94,6 +94,10 @@
       <button type="button" (click)="loadExistingAnalysis()" [disabled]="isSubmitting">Analyse laden</button>
       <button type="button" (click)="loadAnalysisStatus()" [disabled]="isSubmitting">Status laden</button>
       <button type="button" (click)="renameAnalysis()" [disabled]="isSubmitting">Namen speichern</button>
+      <button type="button" class="primary" (click)="computeStatistics()" [disabled]="isStatisticsLoading">
+        <span *ngIf="isStatisticsLoading" class="spinner" aria-hidden="true"></span>
+        {{ isStatisticsLoading ? 'Compute Statistics ...' : 'Compute Statistics' }}
+      </button>
     </div>
 
     <p class="state-message" *ngIf="statusResult as status">
@@ -205,5 +209,139 @@
     <ng-template #noData>
       <p class="state-message">Analyse ausgeführt, aber keine Datenpunkte zurückgegeben.</p>
     </ng-template>
+  </section>
+
+  <section class="result">
+    <h2>Statistical Insights</h2>
+    <div class="toast error" *ngIf="statisticsErrorMessage">{{ statisticsErrorMessage }}</div>
+    <p class="state-message" *ngIf="isStatisticsLoading">Statistiken werden berechnet ...</p>
+    <p class="state-message" *ngIf="!isStatisticsLoading && !statisticsResult">
+      Noch keine Statistiken berechnet. Nutze „Compute Statistics“.
+    </p>
+    <p class="state-message" *ngIf="statisticsResult && !hasStatisticsData">
+      Statistik-Endpoint hat keine auswertbaren Daten geliefert.
+    </p>
+
+    <div *ngIf="statisticsResult && hasStatisticsData">
+      <h3>Meta</h3>
+      <ul>
+        <li *ngFor="let pair of statisticsResult.meta | keyvalue">{{ pair.key }}: {{ pair.value ?? 'n/a' }}</li>
+      </ul>
+
+      <h3>KPI / Stats Cards</h3>
+      <div class="stats-grid">
+        <article *ngFor="let stat of statisticsCards" class="stats-card">
+          <h4>{{ stat.metric }}</h4>
+          <p>mean: {{ stat.mean }}</p>
+          <p>median: {{ stat.median }}</p>
+          <p>std: {{ stat.std }}</p>
+          <p>min: {{ stat.min }}</p>
+          <p>max: {{ stat.max }}</p>
+        </article>
+      </div>
+
+      <h3>Korrelations-Widget</h3>
+      <div class="corr-grid">
+        <article *ngFor="let correlation of correlationEntries">
+          <strong>{{ correlation.metric }}</strong>
+          <p>{{ correlation.value }}</p>
+        </article>
+      </div>
+
+      <h3>Correlation Matrix</h3>
+      <div class="table-wrap" *ngIf="correlationMatrixRows.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th *ngFor="let column of correlationMatrixColumns">{{ column }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of correlationMatrixRows">
+              <td>{{ row.metric }}</td>
+              <td *ngFor="let value of row.values">{{ value.value }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Bucket Analyse</h3>
+      <div *ngFor="let bucket of bucketAnalysisEntries" class="table-wrap">
+        <h4>{{ bucket.metric }}</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Bucket</th>
+              <th>Count</th>
+              <th>avg_price</th>
+              <th>avg_weather</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of bucket.items">
+              <td>{{ item.bucket }}</td>
+              <td>{{ item.count }}</td>
+              <td>{{ formatValue(item.avg_price) }}</td>
+              <td>{{ formatValue(item.avg_weather) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Scatterplots</h3>
+      <div class="scatter-grid">
+        <article *ngFor="let scatter of scatterPlots">
+          <h4>{{ scatter.metric }} vs price</h4>
+          <svg viewBox="0 0 240 140" role="img" [attr.aria-label]="scatter.metric + ' scatterplot'">
+            <circle *ngFor="let point of scatter.points" [attr.cx]="point.cx" [attr.cy]="point.cy" r="3" fill="#2563eb">
+              <title>{{ point.ts_utc }} | x={{ point.x }} y={{ point.y }}</title>
+            </circle>
+          </svg>
+        </article>
+      </div>
+
+      <h3>Lag Analyse (0..3)</h3>
+      <svg viewBox="0 0 300 120" role="img" aria-label="Lag Analyse Chart">
+        <line x1="0" y1="119" x2="300" y2="119" class="axis"></line>
+        <line x1="1" y1="0" x2="1" y2="120" class="axis"></line>
+        <path
+          *ngFor="let lagLine of lagLines"
+          [attr.d]="lagLine.path"
+          [attr.stroke]="lagLine.color"
+          fill="none"
+          stroke-width="2"
+        ></path>
+      </svg>
+      <ul class="legend">
+        <li *ngFor="let lagLine of lagLines">
+          <span class="dot" [style.background]="lagLine.color"></span>{{ lagLine.metric }}
+        </li>
+      </ul>
+
+      <h3>Interpretation Hints</h3>
+      <ul>
+        <li *ngFor="let hint of statisticsResult.interpretation_hints">{{ hint }}</li>
+      </ul>
+
+      <div *ngIf="statisticsResult.outliers?.length">
+        <h3>Outliers</h3>
+        <ul>
+          <li *ngFor="let outlier of statisticsResult.outliers">
+            {{ outlier.ts_utc }} - {{ outlier.metric }}: {{ formatValue(outlier.value) }} (z={{ formatValue(outlier.z_score) }})
+          </li>
+        </ul>
+      </div>
+
+      <div *ngIf="statisticsResult.trend_lines">
+        <h3>Trend Lines</h3>
+        <ul>
+          <li *ngFor="let trend of statisticsResult.trend_lines | keyvalue">
+            {{ trend.key }}: slope={{ formatValue(trend.value.slope) }}, intercept={{ formatValue(trend.value.intercept) }},
+            r2={{ formatValue(trend.value.r2) }}
+          </li>
+        </ul>
+      </div>
+    </div>
   </section>
 </section>
