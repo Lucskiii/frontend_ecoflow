@@ -48,7 +48,7 @@ export interface WeatherPriceAnalysisStatusResponse {
 }
 
 export interface WeatherPriceStatisticsByRunIdRequest {
-  analysis_run_id: number;
+  analysis_run_id: string | number;
 }
 
 export interface WeatherPriceStatisticsSelectionRequest {
@@ -66,7 +66,7 @@ export type WeatherPriceStatisticsRequest =
 
 export interface WeatherPriceStatisticsMeta {
   source?: string;
-  analysis_run_id?: number;
+  analysis_run_id?: string | number;
   start_date?: string;
   end_date?: string;
   observations?: number;
@@ -99,15 +99,15 @@ export type WeatherPriceBucketAnalysis = Record<string, WeatherPriceBucketItem[]
 
 export interface WeatherPriceScatterPoint {
   ts_utc: string;
-  x: number | null;
-  y: number | null;
+  x: number | string | null;
+  y: number | string | null;
 }
 
 export type WeatherPriceScatterData = Record<string, WeatherPriceScatterPoint[]>;
 
 export interface WeatherPriceLagPoint {
   lag: number;
-  value: number | null;
+  value: number | string | null;
 }
 
 export type WeatherPriceLagAnalysis = Record<string, WeatherPriceLagPoint[]>;
@@ -115,14 +115,14 @@ export type WeatherPriceLagAnalysis = Record<string, WeatherPriceLagPoint[]>;
 export interface WeatherPriceOutlier {
   ts_utc: string;
   metric: string;
-  value: number | null;
-  z_score?: number | null;
+  value: number | string | null;
+  z_score?: number | string | null;
 }
 
 export interface WeatherPriceTrendLine {
-  slope: number | null;
-  intercept: number | null;
-  r2?: number | null;
+  slope: number | string | null;
+  intercept: number | string | null;
+  r2?: number | string | null;
 }
 
 export interface WeatherPriceStatisticsResponse {
