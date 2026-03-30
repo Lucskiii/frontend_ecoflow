@@ -384,7 +384,9 @@ export class WeatherPriceAnalysisComponent implements OnInit {
   }
 
   private buildStatisticsPayload(): WeatherPriceStatisticsRequest | null {
-    const analysisRunIdRaw = this.loadForm.controls.analysis_run_id.value;
+    const analysisRunIdControlValue = this.loadForm.controls.analysis_run_id.value;
+    const analysisRunIdRaw =
+      typeof analysisRunIdControlValue === 'string' ? analysisRunIdControlValue : String(analysisRunIdControlValue ?? '');
     if (!analysisRunIdRaw.trim() && this.form.invalid) {
       this.form.markAllAsTouched();
       return null;

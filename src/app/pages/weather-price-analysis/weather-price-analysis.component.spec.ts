@@ -215,4 +215,12 @@ describe('WeatherPriceAnalysisComponent', () => {
     expect(lagLines.length).toBeGreaterThan(0);
     expect(lagLines[0].path.includes('NaN')).toBeFalse();
   });
+
+  it('handles numeric analysis_run_id values in load form without trim errors', () => {
+    (component as any).loadForm.patchValue({ analysis_run_id: 987 as any });
+
+    (component as any).computeStatistics();
+
+    expect(weatherPriceServiceMock.computeStatistics).toHaveBeenCalledWith({ analysis_run_id: 987 });
+  });
 });
