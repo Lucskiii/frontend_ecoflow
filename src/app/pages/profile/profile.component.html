@@ -9,6 +9,9 @@
     <label for="email">E-Mail</label>
     <input id="email" type="email" formControlName="email" />
 
+    <label for="umsatz">Umsatz</label>
+    <input id="umsatz" type="text" [value]="umsatzDisplay" readonly />
+
     <div class="actions">
       <button type="submit" [disabled]="isSaving || isLoading">{{ isSaving ? 'Speichert...' : 'Speichern' }}</button>
       <button type="button" (click)="reset()" [disabled]="isSaving || isLoading">Abbrechen</button>

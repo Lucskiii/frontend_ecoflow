@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService, CustomerProfile } from '../../auth/auth.service';
+import { formatUmsatzEur } from '../../customers/customer-umsatz.utils';
 
 @Component({
   selector: 'app-profile',
@@ -24,6 +25,7 @@ export class ProfileComponent implements OnInit {
   protected isSaving = false;
   protected errorMessage = '';
   protected successMessage = '';
+  protected umsatzDisplay = formatUmsatzEur(0);
 
   ngOnInit(): void {
     this.loadProfile();
@@ -72,6 +74,7 @@ export class ProfileComponent implements OnInit {
             name: customer?.name ?? '',
             email: customer?.email ?? ''
           });
+          this.umsatzDisplay = formatUmsatzEur(customer?.umsatz_eur);
         },
         error: () => {
           this.errorMessage = 'Profildaten konnten nicht geladen werden.';

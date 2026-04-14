@@ -3,6 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService, CustomerProfile } from '../../auth/auth.service';
+import { formatUmsatzEur } from '../../customers/customer-umsatz.utils';
 import { EnergyPeriod, EnergySeries, EnergySummary, EnergyTimeseriesResponse } from '../../energy/energy.models';
 import { EnergyService } from '../../energy/energy.service';
 
@@ -44,6 +45,8 @@ export class DashboardComponent implements OnInit {
   protected chartTo = '';
 
   protected summary: EnergySummary | null = null;
+  protected customerListLoading = true;
+  protected customerListError = '';
 
   private readonly seriesConfig: Record<string, { label: string; color: string }> = {
     load: { label: 'Verbrauch', color: '#1f77b4' },
@@ -55,8 +58,18 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.authService.getCurrentCustomer().subscribe((customer) => {
       this.customer = customer;
+      this.customerListLoading = false;
+      this.customerListError = '';
       this.loadEnergyData();
+    }, () => {
+      this.customer = null;
+      this.customerListLoading = false;
+      this.customerListError = 'Kundenliste konnte nicht geladen werden.';
     });
+  }
+
+  protected formatUmsatz(value: string | number | null | undefined): string {
+    return formatUmsatzEur(value);
   }
 
   protected onPeriodChange(period: EnergyPeriod): void {
