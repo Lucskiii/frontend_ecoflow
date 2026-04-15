@@ -10,6 +10,13 @@ describe('customer umsatz utils', () => {
     expect(parseUmsatzEur('1234,5')).toBe(1234.5);
   });
 
+  it('parses grouped number strings safely', () => {
+    expect(parseUmsatzEur('1.234,56')).toBe(1234.56);
+    expect(parseUmsatzEur('1,234.56')).toBe(1234.56);
+    expect(parseUmsatzEur('1.234')).toBe(1234);
+    expect(parseUmsatzEur('1,234')).toBe(1234);
+  });
+
   it('falls back to 0 for invalid or empty values', () => {
     expect(parseUmsatzEur('')).toBe(0);
     expect(parseUmsatzEur('n/a')).toBe(0);
