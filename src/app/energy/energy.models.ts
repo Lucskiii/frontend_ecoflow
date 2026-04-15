@@ -1,4 +1,4 @@
-export type EnergyPeriod = 'today' | '7d' | '30d';
+export type EnergyPeriod = 'today' | '7d' | '30d' | 'all';
 
 export interface EnergyTimeseriesQueryParams {
   from?: string;
@@ -31,4 +31,3 @@ export interface EnergyTimeseriesResponse {
   to: string;
   series: EnergySeries[];
 }
-
