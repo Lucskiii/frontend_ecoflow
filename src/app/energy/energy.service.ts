@@ -40,8 +40,10 @@ export class EnergyService {
       from.setHours(0, 0, 0, 0);
     } else if (period === '7d') {
       from.setDate(from.getDate() - 7);
-    } else {
+    } else if (period === '30d') {
       from.setDate(from.getDate() - 30);
+    } else {
+      from.setTime(0);
     }
 
     return {
