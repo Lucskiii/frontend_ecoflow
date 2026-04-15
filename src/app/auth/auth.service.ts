@@ -22,6 +22,7 @@ export interface CustomerProfile {
   id?: string;
   name: string;
   email: string;
+  umsatz_eur?: string | number;
 }
 
 interface JwtPayload {

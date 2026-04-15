@@ -15,6 +15,30 @@
 
   <section class="energy-section">
     <div class="energy-header">
+      <h2>Kundenliste</h2>
+    </div>
+    <div *ngIf="customerListLoading" class="state-message">Kundenliste wird geladen ...</div>
+    <div *ngIf="customerListError" class="state-message error">{{ customerListError }}</div>
+    <table *ngIf="!customerListLoading && customer" aria-label="Kundenliste">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>E-Mail</th>
+          <th>Umsatz (EUR)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ customer.name }}</td>
+          <td>{{ customer.email }}</td>
+          <td>{{ formatUmsatz(customer.umsatz_eur) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="energy-section">
+    <div class="energy-header">
       <h2>Energiedaten</h2>
       <div class="period-selector">
         <button
