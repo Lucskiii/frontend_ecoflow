@@ -12,6 +12,16 @@ describe('DashboardComponent', () => {
     getCurrentCustomer: jasmine.createSpy('getCurrentCustomer').and.returnValue(
       of({ name: 'Max Mustermann', email: 'max@example.com', umsatz_eur: '12.5' })
     ),
+    getRevenuePeriods: jasmine.createSpy('getRevenuePeriods').and.returnValue(
+      of({
+        customer_id: 'c-1',
+        periods: [
+          { period: 'all', from: '2025-01-01T00:00:00Z', to: '2026-04-20T00:00:00Z', umsatz_eur: '320.5', calculated_at: '2026-04-20T00:00:00Z' },
+          { period: '30d', from: '2026-03-21T00:00:00Z', to: '2026-04-20T00:00:00Z', umsatz_eur: '75', calculated_at: '2026-04-20T00:00:00Z' },
+          { period: '7d', from: '2026-04-13T00:00:00Z', to: '2026-04-20T00:00:00Z', umsatz_eur: '18.4', calculated_at: '2026-04-20T00:00:00Z' }
+        ]
+      })
+    ),
     logout: jasmine.createSpy('logout')
   };
 
@@ -44,11 +54,15 @@ describe('DashboardComponent', () => {
     fixture.detectChanges();
   });
 
-  it('renders kundenliste with umsatz column and formatted value', () => {
+  it('renders kundenliste with period based umsatz values', () => {
     const element: HTMLElement = fixture.nativeElement;
 
     expect(element.textContent).toContain('Kundenliste');
-    expect(element.textContent).toContain('Umsatz (EUR)');
-    expect(element.textContent).toContain('12,50 €');
+    expect(element.textContent).toContain('Umsatz Gesamt');
+    expect(element.textContent).toContain('Umsatz 30 Tage');
+    expect(element.textContent).toContain('Umsatz 7 Tage');
+    expect(element.textContent).toContain('320,50 €');
+    expect(element.textContent).toContain('75,00 €');
+    expect(element.textContent).toContain('18,40 €');
   });
 });

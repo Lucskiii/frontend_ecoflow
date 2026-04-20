@@ -10,6 +10,16 @@ describe('ProfileComponent', () => {
     getCurrentCustomer: jasmine.createSpy('getCurrentCustomer').and.returnValue(
       of({ name: 'Max Mustermann', email: 'max@example.com', umsatz_eur: '1' })
     ),
+    getRevenuePeriods: jasmine.createSpy('getRevenuePeriods').and.returnValue(
+      of({
+        customer_id: 'c-1',
+        periods: [
+          { period: 'all', from: '2025-01-01T00:00:00Z', to: '2026-04-20T00:00:00Z', umsatz_eur: '140', calculated_at: '2026-04-20T00:00:00Z' },
+          { period: '30d', from: '2026-03-21T00:00:00Z', to: '2026-04-20T00:00:00Z', umsatz_eur: '22.5', calculated_at: '2026-04-20T00:00:00Z' },
+          { period: '7d', from: '2026-04-13T00:00:00Z', to: '2026-04-20T00:00:00Z', umsatz_eur: '5', calculated_at: '2026-04-20T00:00:00Z' }
+        ]
+      })
+    ),
     updateProfile: jasmine.createSpy('updateProfile').and.returnValue(of({}))
   };
 
@@ -25,10 +35,14 @@ describe('ProfileComponent', () => {
     fixture.detectChanges();
   });
 
-  it('renders formatted umsatz in profile detail', () => {
+  it('renders formatted umsatz for all configured periods', () => {
     const element: HTMLElement = fixture.nativeElement;
 
-    expect(element.textContent).toContain('Umsatz');
-    expect((element.querySelector('#umsatz') as HTMLInputElement).value).toBe('1,00 €');
+    expect(element.textContent).toContain('Umsatz Gesamt');
+    expect(element.textContent).toContain('Umsatz 30 Tage');
+    expect(element.textContent).toContain('Umsatz 7 Tage');
+    expect((element.querySelector('#umsatzAll') as HTMLInputElement).value).toBe('140,00 €');
+    expect((element.querySelector('#umsatz30d') as HTMLInputElement).value).toBe('22,50 €');
+    expect((element.querySelector('#umsatz7d') as HTMLInputElement).value).toBe('5,00 €');
   });
 });

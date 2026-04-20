@@ -25,7 +25,9 @@ export class ProfileComponent implements OnInit {
   protected isSaving = false;
   protected errorMessage = '';
   protected successMessage = '';
-  protected umsatzDisplay = formatUmsatzEur(0);
+  protected alltimeUmsatzDisplay = formatUmsatzEur(0);
+  protected umsatz30dDisplay = formatUmsatzEur(0);
+  protected umsatz7dDisplay = formatUmsatzEur(0);
 
   ngOnInit(): void {
     this.loadProfile();
@@ -74,11 +76,27 @@ export class ProfileComponent implements OnInit {
             name: customer?.name ?? '',
             email: customer?.email ?? ''
           });
-          this.umsatzDisplay = formatUmsatzEur(customer?.umsatz_eur);
+          this.loadRevenuePeriods();
         },
         error: () => {
           this.errorMessage = 'Profildaten konnten nicht geladen werden.';
         }
       });
+  }
+
+  private loadRevenuePeriods(): void {
+    this.authService.getRevenuePeriods().subscribe({
+      next: (response) => {
+        const periods = response?.periods ?? [];
+        this.alltimeUmsatzDisplay = formatUmsatzEur(periods.find((period) => period.period === 'all')?.umsatz_eur);
+        this.umsatz30dDisplay = formatUmsatzEur(periods.find((period) => period.period === '30d')?.umsatz_eur);
+        this.umsatz7dDisplay = formatUmsatzEur(periods.find((period) => period.period === '7d')?.umsatz_eur);
+      },
+      error: () => {
+        this.alltimeUmsatzDisplay = formatUmsatzEur(0);
+        this.umsatz30dDisplay = formatUmsatzEur(0);
+        this.umsatz7dDisplay = formatUmsatzEur(0);
+      }
+    });
   }
 }

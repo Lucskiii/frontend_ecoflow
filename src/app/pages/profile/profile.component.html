@@ -9,8 +9,14 @@
     <label for="email">E-Mail</label>
     <input id="email" type="email" formControlName="email" />
 
-    <label for="umsatz">Umsatz</label>
-    <input id="umsatz" type="text" [value]="umsatzDisplay" readonly />
+    <label for="umsatzAll">Umsatz Gesamt</label>
+    <input id="umsatzAll" type="text" [value]="alltimeUmsatzDisplay" readonly />
+
+    <label for="umsatz30d">Umsatz 30 Tage</label>
+    <input id="umsatz30d" type="text" [value]="umsatz30dDisplay" readonly />
+
+    <label for="umsatz7d">Umsatz 7 Tage</label>
+    <input id="umsatz7d" type="text" [value]="umsatz7dDisplay" readonly />
 
     <div class="actions">
       <button type="submit" [disabled]="isSaving || isLoading">{{ isSaving ? 'Speichert...' : 'Speichern' }}</button>

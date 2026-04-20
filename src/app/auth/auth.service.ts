@@ -25,6 +25,21 @@ export interface CustomerProfile {
   umsatz_eur?: string | number;
 }
 
+export type RevenuePeriodKey = 'all' | '30d' | '7d';
+
+export interface RevenuePeriodEntry {
+  period: RevenuePeriodKey;
+  from: string;
+  to: string;
+  umsatz_eur: string | number;
+  calculated_at: string;
+}
+
+export interface RevenuePeriodsResponse {
+  customer_id: string;
+  periods: RevenuePeriodEntry[];
+}
+
 interface JwtPayload {
   sub?: string;
   customer_id?: string;
@@ -76,6 +91,18 @@ export class AuthService {
     return this.http.put<CustomerProfile>('http://localhost:8000/api/customers/me', profile).pipe(
       tap((updatedProfile) => this.currentCustomerSubject.next(updatedProfile))
     );
+  }
+
+  getRevenuePeriods(): Observable<RevenuePeriodsResponse | null> {
+    const token = this.getToken();
+
+    if (!token) {
+      return of(null);
+    }
+
+    return this.http.get<RevenuePeriodsResponse>('http://localhost:8000/api/customers/me/revenue/periods', {
+      headers: new HttpHeaders({ Authorization: `Bearer ${token}` })
+    });
   }
 
   logout(): void {

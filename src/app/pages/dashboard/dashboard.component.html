@@ -24,14 +24,18 @@
         <tr>
           <th>Name</th>
           <th>E-Mail</th>
-          <th>Umsatz (EUR)</th>
+          <th>Umsatz Gesamt</th>
+          <th>Umsatz 30 Tage</th>
+          <th>Umsatz 7 Tage</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>{{ customer.name }}</td>
           <td>{{ customer.email }}</td>
-          <td>{{ formatUmsatz(customer.umsatz_eur) }}</td>
+          <td>{{ alltimeUmsatz }}</td>
+          <td>{{ umsatz30d }}</td>
+          <td>{{ umsatz7d }}</td>
         </tr>
       </tbody>
     </table>
