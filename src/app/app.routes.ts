@@ -6,6 +6,7 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { PortfolioComponent } from './pages/portfolio/portfolio.component';
 import { AnalysisCitiesComponent } from './pages/analysis-cities/analysis-cities.component';
 import { WeatherPriceAnalysisComponent } from './pages/weather-price-analysis/weather-price-analysis.component';
+import { BiPrototypeComponent } from './pages/bi-prototype/bi-prototype.component';
 import { authGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
@@ -17,5 +18,6 @@ export const routes: Routes = [
   { path: 'portfolio', component: PortfolioComponent, canActivate: [authGuard] },
   { path: 'analysis-cities', component: AnalysisCitiesComponent, canActivate: [authGuard] },
   { path: 'weather-price-analysis', component: WeatherPriceAnalysisComponent, canActivate: [authGuard] },
+  { path: 'bi-prototype', component: BiPrototypeComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: 'login' }
 ];

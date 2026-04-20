@@ -1,0 +1,157 @@
+<section class="bi-prototype">
+  <header class="page-header">
+    <div>
+      <h1>BI Prototype</h1>
+      <p>Sync auslösen und Trenddaten für Energie- und Marktpreise prüfen.</p>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2>Sync</h2>
+    <form [formGroup]="syncForm" (ngSubmit)="startSync()" class="grid-form">
+      <label for="sync_from">from (ISO + Zeitzone) *</label>
+      <input id="sync_from" type="text" formControlName="from" placeholder="2026-04-20T00:00:00+02:00" />
+
+      <label for="sync_to">to (ISO + Zeitzone) *</label>
+      <input id="sync_to" type="text" formControlName="to" placeholder="2026-04-20T12:00:00+02:00" />
+
+      <button type="submit" [disabled]="syncLoading">
+        <span *ngIf="syncLoading" class="spinner" aria-hidden="true"></span>
+        {{ syncLoading ? 'Sync läuft ...' : 'Sync starten' }}
+      </button>
+    </form>
+
+    <p *ngIf="syncError" class="state-message error">{{ syncError }}</p>
+    <p *ngIf="syncLoading" class="state-message">Sync wird ausgeführt ...</p>
+
+    <div *ngIf="syncResult as sync" class="kpi-grid">
+      <article>
+        <p>dim_time</p>
+        <strong>{{ sync.inserted_or_updated_dim_time }}</strong>
+      </article>
+      <article>
+        <p>dim_site</p>
+        <strong>{{ sync.inserted_or_updated_dim_site }}</strong>
+      </article>
+      <article>
+        <p>dim_market_product</p>
+        <strong>{{ sync.inserted_or_updated_dim_market_product }}</strong>
+      </article>
+      <article>
+        <p>fact_energy_interval</p>
+        <strong>{{ sync.inserted_or_updated_fact_energy_interval }}</strong>
+      </article>
+      <article>
+        <p>fact_market_price</p>
+        <strong>{{ sync.inserted_or_updated_fact_market_price }}</strong>
+      </article>
+      <article>
+        <p>Zeitfenster</p>
+        <strong>{{ sync.from }} → {{ sync.to }}</strong>
+      </article>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Energie-Trend</h2>
+    <form [formGroup]="energyTrendForm" (ngSubmit)="loadEnergyTrend()" class="grid-form">
+      <label for="energy_from">from *</label>
+      <input id="energy_from" type="text" formControlName="from" placeholder="2026-04-20T00:00:00+02:00" />
+
+      <label for="energy_to">to *</label>
+      <input id="energy_to" type="text" formControlName="to" placeholder="2026-04-20T12:00:00+02:00" />
+
+      <label for="site_key">site_key (optional)</label>
+      <input id="site_key" type="text" formControlName="site_key" placeholder="SITE-123" />
+
+      <button type="submit" [disabled]="energyLoading">
+        <span *ngIf="energyLoading" class="spinner" aria-hidden="true"></span>
+        {{ energyLoading ? 'Lade ...' : 'Energie-Trend laden' }}
+      </button>
+    </form>
+
+    <p *ngIf="energyError" class="state-message error">{{ energyError }}</p>
+    <p *ngIf="energyLoading" class="state-message">Energie-Trend wird geladen ...</p>
+    <p *ngIf="!energyLoading && energyResult && energyResult.points.length === 0" class="state-message">
+      Keine Datenpunkte für den gewählten Filter gefunden.
+    </p>
+
+    <div *ngIf="energyResult && energyChart.hasData" class="chart-wrap">
+      <svg viewBox="0 0 760 240" role="img" aria-label="Energie Trend">
+        <line x1="0" y1="239" x2="760" y2="239" class="axis"></line>
+        <line x1="1" y1="0" x2="1" y2="240" class="axis"></line>
+        <path [attr.d]="energyChart.path" stroke="#0ea5e9" fill="none" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+    </div>
+
+    <div class="table-wrap" *ngIf="energyResult && energyResult.points.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>ts</th>
+            <th>value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let point of energyResult.points">
+            <td>{{ point.ts }}</td>
+            <td>{{ point.value | number: '1.2-4' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Preis-Trend</h2>
+    <form [formGroup]="priceTrendForm" (ngSubmit)="loadPriceTrend()" class="grid-form">
+      <label for="price_from">from *</label>
+      <input id="price_from" type="text" formControlName="from" placeholder="2026-04-20T00:00:00+02:00" />
+
+      <label for="price_to">to *</label>
+      <input id="price_to" type="text" formControlName="to" placeholder="2026-04-20T12:00:00+02:00" />
+
+      <label for="market_product_key">market_product_key (optional)</label>
+      <input id="market_product_key" type="text" formControlName="market_product_key" placeholder="DAY_AHEAD" />
+
+      <label for="bidding_zone_id">bidding_zone_id (optional)</label>
+      <input id="bidding_zone_id" type="text" formControlName="bidding_zone_id" placeholder="10Y1001A1001A83F" />
+
+      <button type="submit" [disabled]="priceLoading">
+        <span *ngIf="priceLoading" class="spinner" aria-hidden="true"></span>
+        {{ priceLoading ? 'Lade ...' : 'Preis-Trend laden' }}
+      </button>
+    </form>
+
+    <p *ngIf="priceError" class="state-message error">{{ priceError }}</p>
+    <p *ngIf="priceLoading" class="state-message">Preis-Trend wird geladen ...</p>
+    <p *ngIf="!priceLoading && priceResult && priceResult.points.length === 0" class="state-message">
+      Keine Datenpunkte für den gewählten Filter gefunden.
+    </p>
+
+    <div *ngIf="priceResult && priceChart.hasData" class="chart-wrap">
+      <svg viewBox="0 0 760 240" role="img" aria-label="Preis Trend">
+        <line x1="0" y1="239" x2="760" y2="239" class="axis"></line>
+        <line x1="1" y1="0" x2="1" y2="240" class="axis"></line>
+        <path [attr.d]="priceChart.path" stroke="#8b5cf6" fill="none" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+    </div>
+
+    <div class="table-wrap" *ngIf="priceResult && priceResult.points.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>ts</th>
+            <th>value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let point of priceResult.points">
+            <td>{{ point.ts }}</td>
+            <td>{{ point.value | number: '1.2-4' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
