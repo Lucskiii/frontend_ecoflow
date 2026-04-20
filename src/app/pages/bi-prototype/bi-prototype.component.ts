@@ -177,25 +177,30 @@ export class BiPrototypeComponent {
       return { path: '', hasData: false };
     }
 
-    const chartWidth = 760;
-    const chartHeight = 240;
-    const times = points.map((point) => Date.parse(point.ts)).filter((value) => Number.isFinite(value));
-    if (!times.length) {
+    const sanitizedPoints = points
+      .map((point) => ({ ...point, parsedTs: Date.parse(point.ts) }))
+      .filter(
+        (point): point is BiPrototypeTrendPoint & { parsedTs: number } =>
+          Number.isFinite(point.parsedTs) && Number.isFinite(point.value)
+      );
+
+    if (!sanitizedPoints.length) {
       return { path: '', hasData: false };
     }
 
-    const minTs = Math.min(...times);
-    const maxTs = Math.max(...times);
+    const chartWidth = 760;
+    const chartHeight = 240;
+    const minTs = Math.min(...sanitizedPoints.map((point) => point.parsedTs));
+    const maxTs = Math.max(...sanitizedPoints.map((point) => point.parsedTs));
     const tsRange = Math.max(maxTs - minTs, 1);
 
-    const values = points.map((point) => point.value);
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
+    const minValue = Math.min(...sanitizedPoints.map((point) => point.value));
+    const maxValue = Math.max(...sanitizedPoints.map((point) => point.value));
     const valueRange = Math.max(maxValue - minValue, 1);
 
-    const path = points
+    const path = sanitizedPoints
       .map((point, index) => {
-        const x = ((Date.parse(point.ts) - minTs) / tsRange) * chartWidth;
+        const x = ((point.parsedTs - minTs) / tsRange) * chartWidth;
         const y = chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
         return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
       })
