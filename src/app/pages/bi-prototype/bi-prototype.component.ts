@@ -9,6 +9,7 @@ import {
   BiPrototypeTrendPoint
 } from '../../bi-prototype/bi-prototype.models';
 import { BiPrototypeService, mapBiPrototypeError } from '../../bi-prototype/bi-prototype.service';
+import { evaluatePriceTrend, sanitizeAndSortTrendPoints, type PriceTrendEvaluation } from './price-trend-evaluation.helpers';
 
 interface TrendChartViewModel {
   path: string;
@@ -56,6 +57,7 @@ export class BiPrototypeComponent {
   protected priceError = '';
   protected priceResult: BiPrototypePriceTrendResponse | null = null;
   protected priceChart: TrendChartViewModel = { path: '', hasData: false };
+  protected priceEvaluation: PriceTrendEvaluation | null = null;
 
   protected startSync(): void {
     const validationError = this.validateRange(this.syncForm.controls.from.value, this.syncForm.controls.to.value);
@@ -123,6 +125,7 @@ export class BiPrototypeComponent {
 
     this.priceLoading = true;
     this.priceError = '';
+    this.priceEvaluation = null;
 
     this.biPrototypeService
       .getPriceTrend({
@@ -134,12 +137,15 @@ export class BiPrototypeComponent {
       .pipe(finalize(() => (this.priceLoading = false)))
       .subscribe({
         next: (response) => {
-          this.priceResult = response;
-          this.priceChart = this.buildChart(response.points);
+          const sortedPoints = sanitizeAndSortTrendPoints(response.points).map(({ parsedTs, ...point }) => point);
+          this.priceResult = { ...response, points: sortedPoints };
+          this.priceChart = this.buildChart(sortedPoints);
+          this.priceEvaluation = evaluatePriceTrend(sortedPoints);
         },
         error: (error: unknown) => {
           this.priceResult = null;
           this.priceChart = { path: '', hasData: false };
+          this.priceEvaluation = null;
           this.priceError = mapBiPrototypeError(error);
         }
       });
@@ -172,17 +178,31 @@ export class BiPrototypeComponent {
     return /([zZ]|[+\-]\d{2}:\d{2})$/.test(value.trim());
   }
 
+
+  protected formatSigned(value: number): string {
+    const rounded = Math.round(value * 100) / 100;
+    const sign = rounded > 0 ? '+' : '';
+    return `${sign}${rounded.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+  protected trendDirectionLabel(direction: PriceTrendEvaluation['direction']): string {
+    if (direction === 'steigend') {
+      return 'Steigend';
+    }
+
+    if (direction === 'fallend') {
+      return 'Fallend';
+    }
+
+    return 'Stabil';
+  }
+
   private buildChart(points: BiPrototypeTrendPoint[]): TrendChartViewModel {
     if (!points.length) {
       return { path: '', hasData: false };
     }
 
-    const sanitizedPoints = points
-      .map((point) => ({ ...point, parsedTs: Date.parse(point.ts) }))
-      .filter(
-        (point): point is BiPrototypeTrendPoint & { parsedTs: number } =>
-          Number.isFinite(point.parsedTs) && Number.isFinite(point.value)
-      );
+    const sanitizedPoints = sanitizeAndSortTrendPoints(points);
 
     if (!sanitizedPoints.length) {
       return { path: '', hasData: false };

@@ -129,6 +129,35 @@
       Keine Datenpunkte für den gewählten Filter gefunden.
     </p>
 
+
+    <div *ngIf="priceEvaluation" class="kpi-grid">
+      <article>
+        <p>Trend-Richtung</p>
+        <strong>{{ trendDirectionLabel(priceEvaluation.direction) }}</strong>
+      </article>
+      <article>
+        <p>Änderung gesamt</p>
+        <strong>{{ formatSigned(priceEvaluation.absoluteChange) }}</strong>
+      </article>
+      <article>
+        <p>Änderung in %</p>
+        <strong>{{ formatSigned(priceEvaluation.percentChange) }} %</strong>
+      </article>
+      <article>
+        <p>Slope / Stunde</p>
+        <strong>{{ formatSigned(priceEvaluation.slopePerHour) }}</strong>
+      </article>
+      <article>
+        <p>Ø Preis</p>
+        <strong>{{ priceEvaluation.averageValue | number: '1.2-2' }}</strong>
+      </article>
+      <article>
+        <p>Min / Max</p>
+        <strong>
+          {{ priceEvaluation.minValue | number: '1.2-2' }} / {{ priceEvaluation.maxValue | number: '1.2-2' }}
+        </strong>
+      </article>
+    </div>
     <div *ngIf="priceResult && priceChart.hasData" class="chart-wrap">
       <svg viewBox="0 0 760 240" role="img" aria-label="Preis Trend">
         <line x1="0" y1="239" x2="760" y2="239" class="axis"></line>
