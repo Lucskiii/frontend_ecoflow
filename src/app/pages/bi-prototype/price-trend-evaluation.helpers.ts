@@ -1,6 +1,7 @@
 import { BiPrototypeTrendPoint } from '../../bi-prototype/bi-prototype.models';
 
 interface ParsedTrendPoint extends BiPrototypeTrendPoint {
+  value: number;
   parsedTs: number;
 }
 
@@ -19,7 +20,11 @@ export interface PriceTrendEvaluation {
 
 export function sanitizeAndSortTrendPoints(points: BiPrototypeTrendPoint[]): ParsedTrendPoint[] {
   return points
-    .map((point) => ({ ...point, parsedTs: Date.parse(point.ts) }))
+    .map((point) => ({
+      ...point,
+      value: toNumericValue((point as { value: unknown }).value),
+      parsedTs: Date.parse(point.ts)
+    }))
     .filter((point): point is ParsedTrendPoint => Number.isFinite(point.parsedTs) && Number.isFinite(point.value))
     .sort((a, b) => a.parsedTs - b.parsedTs);
 }
@@ -60,4 +65,21 @@ export function evaluatePriceTrend(points: BiPrototypeTrendPoint[]): PriceTrendE
     slopePerHour,
     direction
   };
+}
+
+function toNumericValue(value: unknown): number {
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  if (typeof value !== 'string') {
+    return Number.NaN;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return Number.NaN;
+  }
+
+  return Number(trimmed.replace(',', '.'));
 }

@@ -14,6 +14,17 @@ describe('price-trend-evaluation.helpers', () => {
     expect(sorted[1].ts).toBe('2026-01-01T03:00:00Z');
   });
 
+  it('keeps numeric values represented as strings', () => {
+    const sorted = sanitizeAndSortTrendPoints([
+      { ts: '2026-01-01T01:00:00Z', value: '45.2' as unknown as number },
+      { ts: '2026-01-01T02:00:00Z', value: '46,7' as unknown as number }
+    ]);
+
+    expect(sorted).toHaveSize(2);
+    expect(sorted[0].value).toBeCloseTo(45.2);
+    expect(sorted[1].value).toBeCloseTo(46.7);
+  });
+
   it('evaluates rising trend correctly', () => {
     const evaluation = evaluatePriceTrend([
       { ts: '2026-01-01T03:00:00Z', value: 40 },
