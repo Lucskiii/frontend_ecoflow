@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { AuthService, CustomerProfile } from '../../auth/auth.service';
+import { AuthService, CustomerProfile, RevenuePeriodEntry } from '../../auth/auth.service';
 import { formatUmsatzEur } from '../../customers/customer-umsatz.utils';
 import { EnergyPeriod, EnergySeries, EnergySummary, EnergyTimeseriesResponse } from '../../energy/energy.models';
 import { EnergyService } from '../../energy/energy.service';
@@ -47,6 +47,9 @@ export class DashboardComponent implements OnInit {
   protected summary: EnergySummary | null = null;
   protected customerListLoading = true;
   protected customerListError = '';
+  protected alltimeUmsatz = formatUmsatzEur(0);
+  protected umsatz30d = formatUmsatzEur(0);
+  protected umsatz7d = formatUmsatzEur(0);
 
   private readonly seriesConfig: Record<string, { label: string; color: string }> = {
     load: { label: 'Verbrauch', color: '#1f77b4' },
@@ -58,8 +61,7 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.authService.getCurrentCustomer().subscribe((customer) => {
       this.customer = customer;
-      this.customerListLoading = false;
-      this.customerListError = '';
+      this.loadRevenuePeriods();
       this.loadEnergyData();
     }, () => {
       this.customer = null;
@@ -68,8 +70,26 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  protected formatUmsatz(value: string | number | null | undefined): string {
-    return formatUmsatzEur(value);
+  private loadRevenuePeriods(): void {
+    this.customerListLoading = true;
+    this.customerListError = '';
+
+    this.authService.getRevenuePeriods().subscribe({
+      next: (response) => {
+        const periods = response?.periods ?? [];
+        this.alltimeUmsatz = formatUmsatzEur(this.findUmsatz(periods, 'all'));
+        this.umsatz30d = formatUmsatzEur(this.findUmsatz(periods, '30d'));
+        this.umsatz7d = formatUmsatzEur(this.findUmsatz(periods, '7d'));
+        this.customerListLoading = false;
+      },
+      error: () => {
+        this.alltimeUmsatz = formatUmsatzEur(0);
+        this.umsatz30d = formatUmsatzEur(0);
+        this.umsatz7d = formatUmsatzEur(0);
+        this.customerListError = 'Umsatzdaten konnten nicht geladen werden.';
+        this.customerListLoading = false;
+      }
+    });
   }
 
   protected onPeriodChange(period: EnergyPeriod): void {
@@ -200,5 +220,9 @@ export class DashboardComponent implements OnInit {
     const numericValue = typeof value === 'number' ? value : Number.parseFloat(value);
 
     return Number.isFinite(numericValue) ? numericValue : 0;
+  }
+
+  private findUmsatz(periods: RevenuePeriodEntry[], period: RevenuePeriodEntry['period']): string | number {
+    return periods.find((entry) => entry.period === period)?.umsatz_eur ?? 0;
   }
 }

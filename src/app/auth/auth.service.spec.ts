@@ -51,4 +51,31 @@ describe('AuthService', () => {
 
     request.flush({ success: true });
   });
+
+  it('loads revenue periods with bearer token', () => {
+    localStorage.setItem('auth_token', 'test-token');
+
+    service.getRevenuePeriods().subscribe();
+
+    const request = httpMock.expectOne('http://localhost:8000/api/customers/me/revenue/periods');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.headers.get('Authorization')).toBe('Bearer test-token');
+
+    request.flush({
+      customer_id: 'c-1',
+      periods: []
+    });
+  });
+
+  it('returns null revenue periods when no token is available', () => {
+    localStorage.removeItem('auth_token');
+    let result: unknown = 'not-set';
+
+    service.getRevenuePeriods().subscribe((value) => {
+      result = value;
+    });
+
+    expect(result).toBeNull();
+    httpMock.expectNone('http://localhost:8000/api/customers/me/revenue/periods');
+  });
 });
