@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import {
   BiPrototypeEnergyTrendResponse,
@@ -18,7 +19,7 @@ interface TrendChartViewModel {
 
 @Component({
   selector: 'app-bi-prototype',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './bi-prototype.component.html',
   styleUrl: './bi-prototype.component.scss'
 })
