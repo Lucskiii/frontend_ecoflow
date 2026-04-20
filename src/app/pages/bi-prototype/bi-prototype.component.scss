@@ -5,7 +5,17 @@
 }
 
 .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.back-link {
+  color: #475467;
+  text-decoration: none;
+  font-weight: 600;
 }
 
 .card {
