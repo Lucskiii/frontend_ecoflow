@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, map, of, switchMap, tap } from 'rxjs';
 import { EnergyService } from '../energy/energy.service';
+import { API_BASE_URL } from '../api.config';
 
 interface AuthResponse {
   token?: string;
@@ -54,13 +55,14 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly energyService = inject(EnergyService);
   private readonly tokenStorageKey = 'auth_token';
+  private readonly apiBaseUrl = `${API_BASE_URL}/api`;
   private readonly currentCustomerSubject = new BehaviorSubject<CustomerProfile | null>(null);
 
   readonly currentCustomer$ = this.currentCustomerSubject.asObservable();
 
   login(email: string, password: string): Observable<AuthResponse> {
     return this.http
-      .post<AuthResponse>('http://localhost:8000/api/auth/login', { email, password })
+      .post<AuthResponse>(`${this.apiBaseUrl}/auth/login`, { email, password })
       .pipe(
         tap((response) => this.storeTokenFromResponse(response)),
         switchMap((response) =>
@@ -74,7 +76,7 @@ export class AuthService {
   }
 
   register(payload: RegisterPayload): Observable<unknown> {
-    return this.http.post('http://localhost:8000/api/auth/register', payload);
+    return this.http.post(`${this.apiBaseUrl}/auth/register`, payload);
   }
 
   getCurrentCustomer(): Observable<CustomerProfile | null> {
@@ -88,7 +90,7 @@ export class AuthService {
   }
 
   updateProfile(profile: CustomerProfile): Observable<CustomerProfile> {
-    return this.http.put<CustomerProfile>('http://localhost:8000/api/customers/me', profile).pipe(
+    return this.http.put<CustomerProfile>(`${this.apiBaseUrl}/customers/me`, profile).pipe(
       tap((updatedProfile) => this.currentCustomerSubject.next(updatedProfile))
     );
   }
@@ -100,7 +102,7 @@ export class AuthService {
       return of(null);
     }
 
-    return this.http.get<RevenuePeriodsResponse>('http://localhost:8000/api/customers/me/revenue/periods', {
+    return this.http.get<RevenuePeriodsResponse>(`${this.apiBaseUrl}/customers/me/revenue/periods`, {
       headers: new HttpHeaders({ Authorization: `Bearer ${token}` })
     });
   }
@@ -129,7 +131,7 @@ export class AuthService {
     const customerFromToken = this.extractCustomerFromToken(token);
 
     return this.http
-      .get<CustomerProfile>('http://localhost:8000/api/customers/me', {
+      .get<CustomerProfile>(`${this.apiBaseUrl}/customers/me`, {
         headers: new HttpHeaders({ Authorization: `Bearer ${token}` })
       })
       .pipe(
