@@ -1,6 +1,7 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from '../api.config';
 import {
   BiPrototypeEnergyTrendQuery,
   BiPrototypeEnergyTrendResponse,
@@ -13,7 +14,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class BiPrototypeService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:8000/api/bi/prototype';
+  private readonly baseUrl = `${API_BASE_URL}/api/bi/prototype`;
 
   sync(query: BiPrototypeSyncQuery): Observable<BiPrototypeSyncResponse> {
     const params = new HttpParams().set('from', query.from).set('to', query.to);

@@ -2,11 +2,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { PortfolioExportSummary, PortfolioExportTimeseriesResponse, PortfolioPeriod } from './portfolio.models';
+import { API_BASE_URL } from '../api.config';
 
 @Injectable({ providedIn: 'root' })
 export class PortfolioService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:8000/api/portfolio/export';
+  private readonly baseUrl = `${API_BASE_URL}/api/portfolio/export`;
 
   getExportSummary(period: PortfolioPeriod): Observable<PortfolioExportSummary> {
     const params = new HttpParams().set('period', period);

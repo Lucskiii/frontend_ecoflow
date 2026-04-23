@@ -2,11 +2,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { EnergyPeriod, EnergySummary, EnergyTimeseriesQueryParams, EnergyTimeseriesResponse } from './energy.models';
+import { API_BASE_URL } from '../api.config';
 
 @Injectable({ providedIn: 'root' })
 export class EnergyService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:8000/api/customers/me/energy';
+  private readonly baseUrl = `${API_BASE_URL}/api/customers/me/energy`;
 
   simulate(): Observable<unknown> {
     return this.http.post(`${this.baseUrl}/simulate`, {});

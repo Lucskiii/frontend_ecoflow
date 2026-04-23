@@ -2,11 +2,12 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AnalysisCity, AnalysisCityCreateRequest, AnalysisCityListResponse } from './analysis-city.models';
+import { API_BASE_URL } from '../api.config';
 
 @Injectable({ providedIn: 'root' })
 export class AnalysisCityService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:8000/api/analysis-cities';
+  private readonly baseUrl = `${API_BASE_URL}/api/analysis-cities`;
 
   createCity(payload: AnalysisCityCreateRequest): Observable<AnalysisCity> {
     return this.http.post<AnalysisCity>(this.baseUrl, payload);

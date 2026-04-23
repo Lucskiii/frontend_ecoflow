@@ -1,6 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from '../api.config';
 import {
   WeatherPriceAnalysisRenameRequest,
   WeatherPriceAnalysisRequest,
@@ -13,7 +14,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class WeatherPriceAnalysisService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:8000/api/analysis/weather-price';
+  private readonly baseUrl = `${API_BASE_URL}/api/analysis/weather-price`;
 
   runAnalysis(payload: WeatherPriceAnalysisRequest): Observable<WeatherPriceAnalysisResponse> {
     return this.http.post<WeatherPriceAnalysisResponse>(this.baseUrl, payload);
