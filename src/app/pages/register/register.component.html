@@ -1,62 +1,65 @@
-<section class="auth-card">
-  <h1>Registrieren</h1>
-  <p class="hint">Alle Felder mit * sind Pflichtfelder.</p>
+<section class="auth-shell">
+  <section class="auth-card">
+    <p class="brand">Eco Flow</p>
+    <h1>Registrieren</h1>
+    <p class="hint">Alle Felder mit * sind Pflichtfelder.</p>
 
-  <form [formGroup]="registerForm" (ngSubmit)="submit()">
-    <label for="name">Name *</label>
-    <input id="name" type="text" formControlName="name" />
-    <small *ngIf="registerForm.controls.name.touched && registerForm.controls.name.invalid">
-      Name ist erforderlich.
-    </small>
+    <form [formGroup]="registerForm" (ngSubmit)="submit()">
+      <label for="name">Name *</label>
+      <input id="name" type="text" formControlName="name" />
+      <small *ngIf="registerForm.controls.name.touched && registerForm.controls.name.invalid">
+        Name ist erforderlich.
+      </small>
 
-    <label for="email">E-Mail *</label>
-    <input id="email" type="email" formControlName="email" />
-    <small *ngIf="registerForm.controls.email.touched && registerForm.controls.email.invalid">
-      Bitte eine gültige E-Mail eingeben.
-    </small>
+      <label for="email">E-Mail *</label>
+      <input id="email" type="email" formControlName="email" />
+      <small *ngIf="registerForm.controls.email.touched && registerForm.controls.email.invalid">
+        Bitte eine gültige E-Mail eingeben.
+      </small>
 
-    <label for="password">Passwort *</label>
-    <input id="password" type="password" formControlName="password" />
-    <small *ngIf="registerForm.controls.password.touched && registerForm.controls.password.invalid">
-      Passwort ist erforderlich.
-    </small>
+      <label for="password">Passwort *</label>
+      <input id="password" type="password" formControlName="password" />
+      <small *ngIf="registerForm.controls.password.touched && registerForm.controls.password.invalid">
+        Passwort ist erforderlich.
+      </small>
 
-    <label for="address_line1">Adresse *</label>
-    <input id="address_line1" type="text" formControlName="address_line1" />
-    <small *ngIf="registerForm.controls.address_line1.touched && registerForm.controls.address_line1.invalid">
-      Adresse ist erforderlich.
-    </small>
+      <label for="address_line1">Adresse *</label>
+      <input id="address_line1" type="text" formControlName="address_line1" />
+      <small *ngIf="registerForm.controls.address_line1.touched && registerForm.controls.address_line1.invalid">
+        Adresse ist erforderlich.
+      </small>
 
-    <label for="city">Stadt *</label>
-    <input id="city" type="text" formControlName="city" />
-    <small *ngIf="registerForm.controls.city.touched && registerForm.controls.city.invalid">
-      Stadt ist erforderlich.
-    </small>
+      <label for="city">Stadt *</label>
+      <input id="city" type="text" formControlName="city" />
+      <small *ngIf="registerForm.controls.city.touched && registerForm.controls.city.invalid">
+        Stadt ist erforderlich.
+      </small>
 
-    <label for="postal_code">Postleitzahl *</label>
-    <input id="postal_code" type="text" formControlName="postal_code" />
-    <small *ngIf="registerForm.controls.postal_code.touched && registerForm.controls.postal_code.hasError('required')">
-      Postleitzahl ist erforderlich.
-    </small>
-    <small *ngIf="registerForm.controls.postal_code.touched && registerForm.controls.postal_code.hasError('pattern')">
-      Bitte eine gültige Postleitzahl eingeben.
-    </small>
+      <label for="postal_code">Postleitzahl *</label>
+      <input id="postal_code" type="text" formControlName="postal_code" />
+      <small *ngIf="registerForm.controls.postal_code.touched && registerForm.controls.postal_code.hasError('required')">
+        Postleitzahl ist erforderlich.
+      </small>
+      <small *ngIf="registerForm.controls.postal_code.touched && registerForm.controls.postal_code.hasError('pattern')">
+        Bitte eine gültige Postleitzahl eingeben.
+      </small>
 
-    <label for="country">Land *</label>
-    <select id="country" formControlName="country">
-      <option *ngFor="let countryOption of countries" [value]="countryOption.value">{{ countryOption.label }}</option>
-    </select>
-    <small *ngIf="registerForm.controls.country.touched && registerForm.controls.country.invalid">
-      Land ist erforderlich.
-    </small>
+      <label for="country">Land *</label>
+      <select id="country" formControlName="country">
+        <option *ngFor="let countryOption of countries" [value]="countryOption.value">{{ countryOption.label }}</option>
+      </select>
+      <small *ngIf="registerForm.controls.country.touched && registerForm.controls.country.invalid">
+        Land ist erforderlich.
+      </small>
 
-    <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
-    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
-    <button type="submit" [disabled]="isLoading">
-      {{ isLoading ? 'Registrieren...' : 'Registrieren' }}
-    </button>
-  </form>
+      <button type="submit" [disabled]="isLoading">
+        {{ isLoading ? 'Registrieren...' : 'Registrieren' }}
+      </button>
+    </form>
 
-  <a routerLink="/login">Schon ein Konto? Anmelden</a>
+    <a routerLink="/login">Schon ein Konto? Anmelden</a>
+  </section>
 </section>

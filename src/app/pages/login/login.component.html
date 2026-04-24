@@ -1,25 +1,29 @@
-<section class="auth-card">
-  <h1>Anmelden</h1>
+<section class="auth-shell">
+  <section class="auth-card">
+    <p class="brand">Eco Flow</p>
+    <h1>Anmelden</h1>
+    <p class="intro">Willkommen im Energy Dashboard.</p>
 
-  <form [formGroup]="loginForm" (ngSubmit)="submit()">
-    <label for="email">E-Mail</label>
-    <input id="email" type="email" formControlName="email" />
-    <small *ngIf="loginForm.controls.email.touched && loginForm.controls.email.invalid">
-      Bitte eine gültige E-Mail eingeben.
-    </small>
+    <form [formGroup]="loginForm" (ngSubmit)="submit()">
+      <label for="email">E-Mail</label>
+      <input id="email" type="email" formControlName="email" />
+      <small *ngIf="loginForm.controls.email.touched && loginForm.controls.email.invalid">
+        Bitte eine gültige E-Mail eingeben.
+      </small>
 
-    <label for="password">Passwort</label>
-    <input id="password" type="password" formControlName="password" />
-    <small *ngIf="loginForm.controls.password.touched && loginForm.controls.password.invalid">
-      Passwort ist erforderlich.
-    </small>
+      <label for="password">Passwort</label>
+      <input id="password" type="password" formControlName="password" />
+      <small *ngIf="loginForm.controls.password.touched && loginForm.controls.password.invalid">
+        Passwort ist erforderlich.
+      </small>
 
-    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
-    <button type="submit" [disabled]="isLoading">
-      {{ isLoading ? 'Anmelden...' : 'Anmelden' }}
-    </button>
-  </form>
+      <button type="submit" [disabled]="isLoading">
+        {{ isLoading ? 'Anmelden...' : 'Anmelden' }}
+      </button>
+    </form>
 
-  <a routerLink="/register">Noch kein Konto? Registrieren</a>
+    <a routerLink="/register">Noch kein Konto? Registrieren</a>
+  </section>
 </section>

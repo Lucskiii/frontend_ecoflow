@@ -1,29 +1,31 @@
 .profile {
-  max-width: 540px;
-  margin: 2rem auto;
-  padding: 1rem;
+  max-width: 620px;
+  margin: 1.6rem auto;
+  padding: 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
 }
 
-form {
-  display: grid;
-  gap: 0.5rem;
-}
+p { color: var(--text-secondary); }
 
-input {
-  padding: 0.5rem;
-}
+form { display: grid; gap: 0.5rem; }
 
 .actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0.7rem;
+  flex-wrap: wrap;
+
+  a {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 0.56rem 0.86rem;
+    background: rgba(19, 24, 19, 0.85);
+  }
 }
 
-.success {
-  color: #0d7a2f;
-}
-
-.error {
-  color: #b42318;
-}
+.success { color: var(--success); }
+.error { color: var(--danger); }
