@@ -70,3 +70,5 @@ button { width: fit-content; min-width: 180px; }
 @media (max-width: 760px) {
   .grid-form { grid-template-columns: 1fr; }
 }
+
+.checkbox-label { display: inline-flex; align-items: center; gap: 0.45rem; }
