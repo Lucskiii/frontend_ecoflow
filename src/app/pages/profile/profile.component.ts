@@ -61,6 +61,11 @@ export class ProfileComponent implements OnInit {
       });
   }
 
+
+  protected cancel(): void {
+    this.reset();
+    void this.router.navigate(['/dashboard']);
+  }
   protected reset(): void {
     this.profileForm.reset(this.initialProfile);
     this.profileForm.markAsPristine();
