@@ -192,7 +192,7 @@
       </ul>
     </div>
 
-    <label *ngIf="analysisResult.data.length > 0"><input type="checkbox" [(ngModel)]="hideWeatherRows" [ngModelOptions]="{standalone: true}" /> Zeilen ausblenden</label>
+    <label *ngIf="analysisResult.data.length > 0"><input type="checkbox" [checked]="hideWeatherRows" (change)="toggleWeatherRows($event)" /> Zeilen ausblenden</label>
     <div class="table-wrap" *ngIf="analysisResult.data.length > 0 && !hideWeatherRows; else noData">
       <table>
         <thead>
@@ -265,7 +265,7 @@
       </div>
 
       <h3>Correlation Matrix</h3>
-      <label *ngIf="correlationMatrixRows.length > 0"><input type="checkbox" [(ngModel)]="hideWeatherRows" [ngModelOptions]="{standalone: true}" /> Zeilen ausblenden</label>
+      <label *ngIf="correlationMatrixRows.length > 0"><input type="checkbox" [checked]="hideWeatherRows" (change)="toggleWeatherRows($event)" /> Zeilen ausblenden</label>
       <div class="table-wrap" *ngIf="correlationMatrixRows.length > 0 && !hideWeatherRows">
         <table>
           <thead>
@@ -285,7 +285,7 @@
 
       <h3>Bucket Analyse</h3>
       <div *ngFor="let bucket of bucketAnalysisEntries">
-        <label><input type="checkbox" [(ngModel)]="hideWeatherRows" [ngModelOptions]="{standalone: true}" /> Zeilen ausblenden</label>
+        <label><input type="checkbox" [checked]="hideWeatherRows" (change)="toggleWeatherRows($event)" /> Zeilen ausblenden</label>
         <div class="table-wrap" *ngIf="!hideWeatherRows">
         <h4>{{ bucket.metric }}</h4>
         <table>

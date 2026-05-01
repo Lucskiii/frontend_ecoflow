@@ -122,6 +122,10 @@ export class WeatherPriceAnalysisComponent implements OnInit {
   protected statisticsErrorMessage = '';
   protected hideWeatherRows = false;
 
+  protected toggleWeatherRows(event: Event): void {
+    this.hideWeatherRows = (event.target as HTMLInputElement).checked;
+  }
+
   ngOnInit(): void {
     this.loadCities();
     this.loadBiddingZones();

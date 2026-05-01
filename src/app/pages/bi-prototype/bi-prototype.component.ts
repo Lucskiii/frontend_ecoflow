@@ -61,6 +61,10 @@ export class BiPrototypeComponent {
   protected priceEvaluation: PriceTrendEvaluation | null = null;
   protected hideBiRows = false;
 
+  protected toggleBiRows(event: Event): void {
+    this.hideBiRows = (event.target as HTMLInputElement).checked;
+  }
+
   protected startSync(): void {
     const validationError = this.validateRange(this.syncForm.controls.from.value, this.syncForm.controls.to.value);
     if (validationError || this.syncLoading) {
