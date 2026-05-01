@@ -57,3 +57,5 @@ button.danger { background: rgba(255, 92, 92, 0.16); color: #ffb9b9; border-colo
   .city-row,
   .meta-grid { grid-template-columns: 1fr; }
 }
+
+.checkbox-label { display: inline-flex; align-items: center; gap: 0.45rem; }
