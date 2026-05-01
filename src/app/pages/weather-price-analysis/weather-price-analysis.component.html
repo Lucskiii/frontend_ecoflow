@@ -192,7 +192,8 @@
       </ul>
     </div>
 
-    <div class="table-wrap" *ngIf="analysisResult.data.length > 0; else noData">
+    <label *ngIf="analysisResult.data.length > 0"><input type="checkbox" [(ngModel)]="hideWeatherRows" [ngModelOptions]="{standalone: true}" /> Zeilen ausblenden</label>
+    <div class="table-wrap" *ngIf="analysisResult.data.length > 0 && !hideWeatherRows; else noData">
       <table>
         <thead>
           <tr>
@@ -264,7 +265,8 @@
       </div>
 
       <h3>Correlation Matrix</h3>
-      <div class="table-wrap" *ngIf="correlationMatrixRows.length > 0">
+      <label *ngIf="correlationMatrixRows.length > 0"><input type="checkbox" [(ngModel)]="hideWeatherRows" [ngModelOptions]="{standalone: true}" /> Zeilen ausblenden</label>
+      <div class="table-wrap" *ngIf="correlationMatrixRows.length > 0 && !hideWeatherRows">
         <table>
           <thead>
             <tr>
@@ -282,7 +284,9 @@
       </div>
 
       <h3>Bucket Analyse</h3>
-      <div *ngFor="let bucket of bucketAnalysisEntries" class="table-wrap">
+      <div *ngFor="let bucket of bucketAnalysisEntries">
+        <label><input type="checkbox" [(ngModel)]="hideWeatherRows" [ngModelOptions]="{standalone: true}" /> Zeilen ausblenden</label>
+        <div class="table-wrap" *ngIf="!hideWeatherRows">
         <h4>{{ bucket.metric }}</h4>
         <table>
           <thead>
@@ -302,6 +306,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
 
       <h3>Scatterplots</h3>
