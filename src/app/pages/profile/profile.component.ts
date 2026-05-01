@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService, CustomerProfile } from '../../auth/auth.service';
 import { formatUmsatzEur } from '../../customers/customer-umsatz.utils';
@@ -15,6 +15,7 @@ import { formatUmsatzEur } from '../../customers/customer-umsatz.utils';
 export class ProfileComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   protected readonly profileForm = this.fb.nonNullable.group({
     name: ['', [Validators.required]],
@@ -59,12 +60,13 @@ export class ProfileComponent implements OnInit {
       });
   }
 
-  protected reset(): void {
+  protected cancel(): void {
     this.profileForm.reset(this.initialProfile);
     this.profileForm.markAsPristine();
     this.profileForm.markAsUntouched();
     this.errorMessage = '';
     this.successMessage = '';
+    this.router.navigate(['/dashboard']);
   }
 
   private loadProfile(): void {
