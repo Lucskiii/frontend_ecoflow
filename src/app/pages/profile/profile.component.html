@@ -20,7 +20,7 @@
 
     <div class="actions">
       <button type="submit" [disabled]="isSaving || isLoading">{{ isSaving ? 'Speichert...' : 'Speichern' }}</button>
-      <button type="button" (click)="reset()" [disabled]="isSaving || isLoading">Abbrechen</button>
+      <button type="button" (click)="cancel()" [disabled]="isSaving || isLoading">Abbrechen</button>
       <a routerLink="/dashboard">Zurück zum Dashboard</a>
     </div>
 
