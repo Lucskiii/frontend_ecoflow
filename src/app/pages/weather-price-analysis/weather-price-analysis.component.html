@@ -16,7 +16,13 @@
       <input id="run_name" type="text" formControlName="run_name" placeholder="z.B. Q2 Städte-Mix" />
 
       <label for="bidding_zone_id">bidding_zone_id *</label>
-      <input id="bidding_zone_id" type="number" min="1" step="1" formControlName="bidding_zone_id" placeholder="z.B. 10" />
+      <select id="bidding_zone_id" formControlName="bidding_zone_id">
+        <option [ngValue]="0">Bitte auswählen</option>
+        <option *ngFor="let zone of availableBiddingZones" [ngValue]="zone.id">
+          {{ zone.name }} ({{ zone.code }})
+        </option>
+      </select>
+      <small class="state-message" *ngIf="isLoadingBiddingZones">Bidding Zones werden geladen ...</small>
       <small class="error-text" *ngIf="biddingZoneInvalid">Bitte eine gültige Bidding Zone auswählen.</small>
 
       <label for="start_date">start_date *</label>
@@ -74,7 +80,10 @@
       </small>
     </section>
 
-    <button type="submit" [disabled]="isSubmitting || isLoadingCities || availableCities.length === 0 || form.invalid">
+    <button
+      type="submit"
+      [disabled]="isSubmitting || isLoadingCities || isLoadingBiddingZones || availableCities.length === 0 || availableBiddingZones.length === 0 || form.invalid"
+    >
       <span *ngIf="isSubmitting" class="spinner" aria-hidden="true"></span>
       {{ isSubmitting ? 'Analysiere ...' : 'Analysieren' }}
     </button>

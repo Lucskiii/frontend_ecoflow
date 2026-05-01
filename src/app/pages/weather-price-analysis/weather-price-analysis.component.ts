@@ -13,6 +13,8 @@ import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AnalysisCity } from '../../analysis-cities/analysis-city.models';
 import { AnalysisCityService } from '../../analysis-cities/analysis-city.service';
+import { BiddingZone } from '../../market/bidding-zone.models';
+import { BiddingZoneService } from '../../market/bidding-zone.service';
 import {
   WeatherPriceAnalysisDataPoint,
   WeatherPriceAnalysisRequest,
@@ -74,6 +76,7 @@ interface LagLineViewModel {
 export class WeatherPriceAnalysisComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly analysisCityService = inject(AnalysisCityService);
+  private readonly biddingZoneService = inject(BiddingZoneService);
   private readonly weatherPriceAnalysisService = inject(WeatherPriceAnalysisService);
 
   protected readonly form = this.fb.nonNullable.group({
@@ -87,7 +90,9 @@ export class WeatherPriceAnalysisComponent implements OnInit {
   });
 
   protected availableCities: AnalysisCity[] = [];
+  protected availableBiddingZones: BiddingZone[] = [];
   protected isLoadingCities = true;
+  protected isLoadingBiddingZones = true;
   protected isSubmitting = false;
   protected successMessage = '';
   protected errorMessage = '';
@@ -114,6 +119,7 @@ export class WeatherPriceAnalysisComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCities();
+    this.loadBiddingZones();
     this.addCity();
   }
 
@@ -511,6 +517,22 @@ export class WeatherPriceAnalysisComponent implements OnInit {
         error: () => {
           this.availableCities = [];
           this.errorMessage = 'Analysis Cities konnten nicht geladen werden.';
+        }
+      });
+  }
+
+  private loadBiddingZones(): void {
+    this.isLoadingBiddingZones = true;
+    this.biddingZoneService
+      .listBiddingZones()
+      .pipe(finalize(() => (this.isLoadingBiddingZones = false)))
+      .subscribe({
+        next: (response) => {
+          this.availableBiddingZones = response.items;
+        },
+        error: () => {
+          this.availableBiddingZones = [];
+          this.errorMessage = 'Bidding Zones konnten nicht geladen werden.';
         }
       });
   }
