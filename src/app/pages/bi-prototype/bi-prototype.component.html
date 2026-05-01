@@ -85,7 +85,7 @@
       </svg>
     </div>
 
-    <label *ngIf="energyResult && energyResult.points.length > 0"><input type="checkbox" [checked]="hideBiRows" (change)="toggleBiRows($event)" /> Zeilen ausblenden</label>
+    <label *ngIf="energyResult && energyResult.points.length > 0"><input type="checkbox" [checked]="hideBiRows" (change)="toggleBiRows($event)" aria-label="Zeilen ausblenden" /> Zeilen ausblenden</label>
     <div class="table-wrap" *ngIf="energyResult && energyResult.points.length > 0 && !hideBiRows">
       <table>
         <thead>
@@ -168,7 +168,7 @@
       </svg>
     </div>
 
-    <label *ngIf="priceResult && priceResult.points.length > 0"><input type="checkbox" [checked]="hideBiRows" (change)="toggleBiRows($event)" /> Zeilen ausblenden</label>
+    <label *ngIf="priceResult && priceResult.points.length > 0"><input type="checkbox" [checked]="hideBiRows" (change)="toggleBiRows($event)" aria-label="Zeilen ausblenden" /> Zeilen ausblenden</label>
     <div class="table-wrap" *ngIf="priceResult && priceResult.points.length > 0 && !hideBiRows">
       <table>
         <thead>
