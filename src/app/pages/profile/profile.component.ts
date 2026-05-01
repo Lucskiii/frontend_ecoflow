@@ -28,6 +28,7 @@ export class ProfileComponent implements OnInit {
   protected alltimeUmsatzDisplay = formatUmsatzEur(0);
   protected umsatz30dDisplay = formatUmsatzEur(0);
   protected umsatz7dDisplay = formatUmsatzEur(0);
+  private initialProfile: CustomerProfile = { name: '', email: '' };
 
   ngOnInit(): void {
     this.loadProfile();
@@ -50,6 +51,7 @@ export class ProfileComponent implements OnInit {
       .pipe(finalize(() => (this.isSaving = false)))
       .subscribe({
         next: () => {
+          this.initialProfile = this.profileForm.getRawValue();
           this.successMessage = 'Profil erfolgreich gespeichert.';
         },
         error: () => {
@@ -59,7 +61,11 @@ export class ProfileComponent implements OnInit {
   }
 
   protected reset(): void {
-    this.loadProfile();
+    this.profileForm.reset(this.initialProfile);
+    this.profileForm.markAsPristine();
+    this.profileForm.markAsUntouched();
+    this.errorMessage = '';
+    this.successMessage = '';
   }
 
   private loadProfile(): void {
@@ -72,10 +78,11 @@ export class ProfileComponent implements OnInit {
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
         next: (customer) => {
-          this.profileForm.setValue({
+          this.initialProfile = {
             name: customer?.name ?? '',
             email: customer?.email ?? ''
-          });
+          };
+          this.profileForm.setValue(this.initialProfile);
           this.loadRevenuePeriods();
         },
         error: () => {
