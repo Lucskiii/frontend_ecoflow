@@ -52,6 +52,7 @@ export class ProfileComponent implements OnInit {
       .pipe(finalize(() => (this.isSaving = false)))
       .subscribe({
         next: () => {
+          this.initialProfile = this.profileForm.getRawValue();
           this.successMessage = 'Profil erfolgreich gespeichert.';
         },
         error: () => {
@@ -60,13 +61,12 @@ export class ProfileComponent implements OnInit {
       });
   }
 
-  protected cancel(): void {
+  protected reset(): void {
     this.profileForm.reset(this.initialProfile);
     this.profileForm.markAsPristine();
     this.profileForm.markAsUntouched();
     this.errorMessage = '';
     this.successMessage = '';
-    this.router.navigate(['/dashboard']);
   }
 
   private loadProfile(): void {

@@ -193,7 +193,7 @@
     </div>
 
     <label *ngIf="analysisResult.data.length > 0"><input type="checkbox" [checked]="hideWeatherRows" (change)="toggleWeatherRows($event)" /> Zeilen ausblenden</label>
-    <div class="table-wrap" *ngIf="analysisResult.data.length > 0 && !hideWeatherRows; else noData">
+    <div class="table-wrap" *ngIf="analysisResult.data.length > 0 && !hideWeatherRows">
       <table>
         <thead>
           <tr>
@@ -222,9 +222,7 @@
       </table>
     </div>
 
-    <ng-template #noData>
-      <p class="state-message">Analyse ausgeführt, aber keine Datenpunkte zurückgegeben.</p>
-    </ng-template>
+    <p class="state-message" *ngIf="analysisResult.data.length === 0">Analyse ausgeführt, aber keine Datenpunkte zurückgegeben.</p>
   </section>
 
   <section class="result">
