@@ -5,6 +5,7 @@ import {
   FormArray,
   FormBuilder,
   FormGroup,
+  FormsModule,
   ReactiveFormsModule,
   ValidationErrors,
   Validators
@@ -70,7 +71,7 @@ interface LagLineViewModel {
 
 @Component({
   selector: 'app-weather-price-analysis',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
   templateUrl: './weather-price-analysis.component.html',
   styleUrl: './weather-price-analysis.component.scss'
 })

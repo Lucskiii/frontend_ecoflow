@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
 import { ProfileComponent } from './profile.component';
@@ -22,13 +23,20 @@ describe('ProfileComponent', () => {
     ),
     updateProfile: jasmine.createSpy('updateProfile').and.returnValue(of({}))
   };
+  const routerMock = {
+    navigate: jasmine.createSpy('navigate').and.resolveTo(true)
+  };
 
   beforeEach(async () => {
     authServiceMock.getCurrentCustomer.calls.reset();
+    routerMock.navigate.calls.reset();
 
     await TestBed.configureTestingModule({
       imports: [ProfileComponent],
-      providers: [{ provide: AuthService, useValue: authServiceMock }]
+      providers: [
+        { provide: AuthService, useValue: authServiceMock },
+        { provide: Router, useValue: routerMock }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProfileComponent);
@@ -44,5 +52,20 @@ describe('ProfileComponent', () => {
     expect((element.querySelector('#umsatzAll') as HTMLInputElement).value).toBe('140,00 €');
     expect((element.querySelector('#umsatz30d') as HTMLInputElement).value).toBe('22,50 €');
     expect((element.querySelector('#umsatz7d') as HTMLInputElement).value).toBe('5,00 €');
+  });
+
+  it('resets the form and navigates to dashboard when cancel is clicked', () => {
+    const element: HTMLElement = fixture.nativeElement;
+    const nameInput = element.querySelector('#name') as HTMLInputElement;
+
+    nameInput.value = 'Erika Mustermann';
+    nameInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const cancelButton = element.querySelector('button[type="button"]') as HTMLButtonElement;
+    cancelButton.click();
+
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/dashboard']);
+    expect((element.querySelector('#name') as HTMLInputElement).value).toBe('Max Mustermann');
   });
 });
