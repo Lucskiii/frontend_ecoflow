@@ -85,7 +85,8 @@
       </svg>
     </div>
 
-    <div class="table-wrap" *ngIf="energyResult && energyResult.points.length > 0">
+    <label *ngIf="energyResult && energyResult.points.length > 0"><input type="checkbox" [(ngModel)]="hideBiRows" [ngModelOptions]="{standalone: true}" /> Zeilen ausblenden</label>
+    <div class="table-wrap" *ngIf="energyResult && energyResult.points.length > 0 && !hideBiRows">
       <table>
         <thead>
           <tr>
@@ -167,7 +168,8 @@
       </svg>
     </div>
 
-    <div class="table-wrap" *ngIf="priceResult && priceResult.points.length > 0">
+    <label *ngIf="priceResult && priceResult.points.length > 0"><input type="checkbox" [(ngModel)]="hideBiRows" [ngModelOptions]="{standalone: true}" /> Zeilen ausblenden</label>
+    <div class="table-wrap" *ngIf="priceResult && priceResult.points.length > 0 && !hideBiRows">
       <table>
         <thead>
           <tr>

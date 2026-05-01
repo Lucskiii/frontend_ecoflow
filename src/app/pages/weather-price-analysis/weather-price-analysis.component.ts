@@ -5,6 +5,7 @@ import {
   FormArray,
   FormBuilder,
   FormGroup,
+  FormsModule,
   ReactiveFormsModule,
   ValidationErrors,
   Validators
@@ -70,7 +71,7 @@ interface LagLineViewModel {
 
 @Component({
   selector: 'app-weather-price-analysis',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
   templateUrl: './weather-price-analysis.component.html',
   styleUrl: './weather-price-analysis.component.scss'
 })
@@ -119,6 +120,7 @@ export class WeatherPriceAnalysisComponent implements OnInit {
   protected statisticsResult: WeatherPriceStatisticsResponse | null = null;
   protected isStatisticsLoading = false;
   protected statisticsErrorMessage = '';
+  protected hideWeatherRows = false;
 
   ngOnInit(): void {
     this.loadCities();

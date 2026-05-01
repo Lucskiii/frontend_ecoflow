@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import {
@@ -19,7 +19,7 @@ interface TrendChartViewModel {
 
 @Component({
   selector: 'app-bi-prototype',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
   templateUrl: './bi-prototype.component.html',
   styleUrl: './bi-prototype.component.scss'
 })
@@ -59,6 +59,7 @@ export class BiPrototypeComponent {
   protected priceResult: BiPrototypePriceTrendResponse | null = null;
   protected priceChart: TrendChartViewModel = { path: '', hasData: false };
   protected priceEvaluation: PriceTrendEvaluation | null = null;
+  protected hideBiRows = false;
 
   protected startSync(): void {
     const validationError = this.validateRange(this.syncForm.controls.from.value, this.syncForm.controls.to.value);
