@@ -100,6 +100,16 @@ describe('WeatherPriceAnalysisComponent', () => {
       })
     )
   };
+  const biddingZoneServiceMock = {
+    listBiddingZones: jasmine.createSpy('listBiddingZones').and.returnValue(
+      of({
+        items: [
+          { id: 1, code: 'DE', name: 'Germany' },
+          { id: 2, code: 'AT', name: 'Austria' }
+        ]
+      })
+    )
+  };
 
   beforeEach(async () => {
     Object.values(weatherPriceServiceMock).forEach((spy) => (spy as jasmine.Spy).calls.reset());
