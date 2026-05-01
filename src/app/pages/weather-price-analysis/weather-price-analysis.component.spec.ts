@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { AnalysisCityService } from '../../analysis-cities/analysis-city.service';
+import { BiddingZoneService } from '../../market/bidding-zone.service';
 import { WeatherPriceAnalysisService } from '../../weather-price-analysis/weather-price-analysis.service';
 import { WeatherPriceAnalysisComponent } from './weather-price-analysis.component';
 
@@ -74,15 +75,27 @@ describe('WeatherPriceAnalysisComponent', () => {
       })
     )
   };
+  const biddingZoneServiceMock = {
+    listBiddingZones: jasmine.createSpy('listBiddingZones').and.returnValue(
+      of({
+        items: [
+          { id: 1, code: 'DE', name: 'Germany' },
+          { id: 2, code: 'AT', name: 'Austria' }
+        ]
+      })
+    )
+  };
 
   beforeEach(async () => {
     Object.values(weatherPriceServiceMock).forEach((spy) => (spy as jasmine.Spy).calls.reset());
     analysisCityServiceMock.listCities.calls.reset();
+    biddingZoneServiceMock.listBiddingZones.calls.reset();
 
     await TestBed.configureTestingModule({
       imports: [WeatherPriceAnalysisComponent],
       providers: [
         { provide: AnalysisCityService, useValue: analysisCityServiceMock },
+        { provide: BiddingZoneService, useValue: biddingZoneServiceMock },
         { provide: WeatherPriceAnalysisService, useValue: weatherPriceServiceMock }
       ]
     }).compileComponents();
@@ -94,6 +107,7 @@ describe('WeatherPriceAnalysisComponent', () => {
 
   it('loads available analysis cities on init', () => {
     expect(analysisCityServiceMock.listCities).toHaveBeenCalled();
+    expect(biddingZoneServiceMock.listBiddingZones).toHaveBeenCalled();
   });
 
   it('submits weather-price analysis payload', () => {
