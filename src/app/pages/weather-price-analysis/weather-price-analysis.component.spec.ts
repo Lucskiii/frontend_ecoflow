@@ -73,6 +73,31 @@ describe('WeatherPriceAnalysisComponent', () => {
         lag_analysis: { temp: [{ lag: 0, value: -0.45 }, { lag: 1, value: -0.4 }] },
         interpretation_hints: ['Leichte negative Korrelation']
       })
+    ),
+    listRuns: jasmine.createSpy('listRuns').and.returnValue(
+      of({
+        items: [
+          {
+            analysis_run_id: 123,
+            run_name: 'April Vergleich',
+            status: 'completed',
+            start_date: '2026-04-01',
+            end_date: '2026-04-30',
+            requested_at: '2026-05-01T10:15:00Z',
+            rows_analysis: 720
+          }
+        ]
+      })
+    )
+  };
+  const biddingZoneServiceMock = {
+    listBiddingZones: jasmine.createSpy('listBiddingZones').and.returnValue(
+      of({
+        items: [
+          { id: 1, code: 'DE', name: 'Germany' },
+          { id: 2, code: 'AT', name: 'Austria' }
+        ]
+      })
     )
   };
   const biddingZoneServiceMock = {
@@ -108,6 +133,7 @@ describe('WeatherPriceAnalysisComponent', () => {
   it('loads available analysis cities on init', () => {
     expect(analysisCityServiceMock.listCities).toHaveBeenCalled();
     expect(biddingZoneServiceMock.listBiddingZones).toHaveBeenCalled();
+    expect(weatherPriceServiceMock.listRuns).toHaveBeenCalledWith(100);
   });
 
   it('submits weather-price analysis payload', () => {

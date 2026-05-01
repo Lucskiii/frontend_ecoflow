@@ -93,7 +93,13 @@
     <h2>Bestehende Analyse laden/benennen</h2>
     <div class="grid">
       <label for="analysis_run_id">analysis_run_id *</label>
-      <input id="analysis_run_id" type="text" formControlName="analysis_run_id" placeholder="run-uuid" />
+      <select id="analysis_run_id" formControlName="analysis_run_id">
+        <option value="">Bitte auswählen</option>
+        <option *ngFor="let run of availableRuns" [value]="run.analysis_run_id">
+          {{ runOptionLabel(run) }}
+        </option>
+      </select>
+      <small class="state-message" *ngIf="isLoadingRuns">Analyse-Runs werden geladen ...</small>
 
       <label for="rename_run_name">Neuer run_name</label>
       <input id="rename_run_name" type="text" formControlName="rename_run_name" placeholder="Mein Analyse-Lauf März" />

@@ -18,6 +18,7 @@ import { BiddingZoneService } from '../../market/bidding-zone.service';
 import {
   WeatherPriceAnalysisDataPoint,
   WeatherPriceAnalysisRequest,
+  WeatherPriceAnalysisRunListItem,
   WeatherPriceAnalysisResponse,
   WeatherPriceAnalysisStatusResponse,
   WeatherPriceBucketItem,
@@ -112,6 +113,8 @@ export class WeatherPriceAnalysisComponent implements OnInit {
     analysis_run_id: ['', [Validators.required]],
     rename_run_name: ['']
   });
+  protected availableRuns: WeatherPriceAnalysisRunListItem[] = [];
+  protected isLoadingRuns = true;
 
   protected statisticsResult: WeatherPriceStatisticsResponse | null = null;
   protected isStatisticsLoading = false;
@@ -120,6 +123,7 @@ export class WeatherPriceAnalysisComponent implements OnInit {
   ngOnInit(): void {
     this.loadCities();
     this.loadBiddingZones();
+    this.loadRuns();
     this.addCity();
   }
 
@@ -533,6 +537,27 @@ export class WeatherPriceAnalysisComponent implements OnInit {
         error: () => {
           this.availableBiddingZones = [];
           this.errorMessage = 'Bidding Zones konnten nicht geladen werden.';
+        }
+      });
+  }
+
+  protected runOptionLabel(run: WeatherPriceAnalysisRunListItem): string {
+    const name = run.run_name?.trim() ? run.run_name : `Run ${run.analysis_run_id}`;
+    return `${name} (${run.start_date} bis ${run.end_date}) · ${run.status}`;
+  }
+
+  private loadRuns(): void {
+    this.isLoadingRuns = true;
+    this.weatherPriceAnalysisService
+      .listRuns(100)
+      .pipe(finalize(() => (this.isLoadingRuns = false)))
+      .subscribe({
+        next: (response) => {
+          this.availableRuns = response.items;
+        },
+        error: () => {
+          this.availableRuns = [];
+          this.errorMessage = 'Analyse-Runs konnten nicht geladen werden.';
         }
       });
   }

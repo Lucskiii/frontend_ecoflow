@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../api.config';
 import {
   WeatherPriceAnalysisRenameRequest,
   WeatherPriceAnalysisRequest,
+  WeatherPriceAnalysisRunListResponse,
   WeatherPriceAnalysisResponse,
   WeatherPriceAnalysisStatusResponse,
   WeatherPriceStatisticsRequest,
@@ -34,6 +35,10 @@ export class WeatherPriceAnalysisService {
 
   computeStatistics(payload: WeatherPriceStatisticsRequest): Observable<WeatherPriceStatisticsResponse> {
     return this.http.post<WeatherPriceStatisticsResponse>(`${this.baseUrl}/statistics`, payload);
+  }
+
+  listRuns(limit = 100): Observable<WeatherPriceAnalysisRunListResponse> {
+    return this.http.get<WeatherPriceAnalysisRunListResponse>(`${this.baseUrl}/runs`, { params: { limit } });
   }
 }
 
