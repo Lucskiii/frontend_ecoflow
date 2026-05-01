@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { AnalysisCityService } from '../../analysis-cities/analysis-city.service';
+import { BiddingZoneService } from '../../market/bidding-zone.service';
 import { WeatherPriceAnalysisService } from '../../weather-price-analysis/weather-price-analysis.service';
 import { WeatherPriceAnalysisComponent } from './weather-price-analysis.component';
 
@@ -72,17 +73,44 @@ describe('WeatherPriceAnalysisComponent', () => {
         lag_analysis: { temp: [{ lag: 0, value: -0.45 }, { lag: 1, value: -0.4 }] },
         interpretation_hints: ['Leichte negative Korrelation']
       })
+    ),
+    listRuns: jasmine.createSpy('listRuns').and.returnValue(
+      of({
+        items: [
+          {
+            analysis_run_id: 123,
+            run_name: 'April Vergleich',
+            status: 'completed',
+            start_date: '2026-04-01',
+            end_date: '2026-04-30',
+            requested_at: '2026-05-01T10:15:00Z',
+            rows_analysis: 720
+          }
+        ]
+      })
+    )
+  };
+  const biddingZoneServiceMock = {
+    listBiddingZones: jasmine.createSpy('listBiddingZones').and.returnValue(
+      of({
+        items: [
+          { id: 1, code: 'DE', name: 'Germany' },
+          { id: 2, code: 'AT', name: 'Austria' }
+        ]
+      })
     )
   };
 
   beforeEach(async () => {
     Object.values(weatherPriceServiceMock).forEach((spy) => (spy as jasmine.Spy).calls.reset());
     analysisCityServiceMock.listCities.calls.reset();
+    biddingZoneServiceMock.listBiddingZones.calls.reset();
 
     await TestBed.configureTestingModule({
       imports: [WeatherPriceAnalysisComponent],
       providers: [
         { provide: AnalysisCityService, useValue: analysisCityServiceMock },
+        { provide: BiddingZoneService, useValue: biddingZoneServiceMock },
         { provide: WeatherPriceAnalysisService, useValue: weatherPriceServiceMock }
       ]
     }).compileComponents();
@@ -94,6 +122,8 @@ describe('WeatherPriceAnalysisComponent', () => {
 
   it('loads available analysis cities on init', () => {
     expect(analysisCityServiceMock.listCities).toHaveBeenCalled();
+    expect(biddingZoneServiceMock.listBiddingZones).toHaveBeenCalled();
+    expect(weatherPriceServiceMock.listRuns).toHaveBeenCalledWith(100);
   });
 
   it('submits weather-price analysis payload', () => {

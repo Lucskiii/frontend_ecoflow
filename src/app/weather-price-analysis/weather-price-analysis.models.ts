@@ -41,10 +41,24 @@ export interface WeatherPriceAnalysisResponse {
 }
 
 export interface WeatherPriceAnalysisStatusResponse {
-  analysis_run_id: string;
+  analysis_run_id: string | number;
   run_name?: string;
   status: string;
   message?: string;
+}
+
+export interface WeatherPriceAnalysisRunListItem {
+  analysis_run_id: string | number;
+  run_name: string | null;
+  status: string;
+  start_date: string;
+  end_date: string;
+  requested_at: string;
+  rows_analysis: number;
+}
+
+export interface WeatherPriceAnalysisRunListResponse {
+  items: WeatherPriceAnalysisRunListItem[];
 }
 
 export interface WeatherPriceStatisticsByRunIdRequest {
