@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { API_BASE_URL } from '../api.config';
 import { EnergyService } from './energy.service';
 
 describe('EnergyService', () => {
@@ -23,7 +24,7 @@ describe('EnergyService', () => {
   it('calls simulate endpoint with empty payload', () => {
     service.simulate().subscribe();
 
-    const request = httpMock.expectOne('http://localhost:8000/api/customers/me/energy/simulate');
+    const request = httpMock.expectOne(`${API_BASE_URL}/api/customers/me/energy/simulate`);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({});
 
@@ -33,7 +34,7 @@ describe('EnergyService', () => {
   it('loads summary without period param when omitted', () => {
     service.getSummary().subscribe();
 
-    const request = httpMock.expectOne((req) => req.url === 'http://localhost:8000/api/customers/me/energy/summary');
+    const request = httpMock.expectOne((req) => req.url === `${API_BASE_URL}/api/customers/me/energy/summary`);
     expect(request.request.method).toBe('GET');
     expect(request.request.params.has('period')).toBeFalse();
 
@@ -43,7 +44,7 @@ describe('EnergyService', () => {
   it('loads summary with period param when provided', () => {
     service.getSummary('7d').subscribe();
 
-    const request = httpMock.expectOne((req) => req.url === 'http://localhost:8000/api/customers/me/energy/summary');
+    const request = httpMock.expectOne((req) => req.url === `${API_BASE_URL}/api/customers/me/energy/summary`);
     expect(request.request.params.get('period')).toBe('7d');
 
     request.flush({});
@@ -52,7 +53,7 @@ describe('EnergyService', () => {
   it('loads timeseries with default interval only when no optional params are given', () => {
     service.getTimeseries().subscribe();
 
-    const request = httpMock.expectOne((req) => req.url === 'http://localhost:8000/api/customers/me/energy/timeseries');
+    const request = httpMock.expectOne((req) => req.url === `${API_BASE_URL}/api/customers/me/energy/timeseries`);
     expect(request.request.params.get('interval')).toBe('15m');
     expect(request.request.params.has('from')).toBeFalse();
     expect(request.request.params.has('to')).toBeFalse();
@@ -63,7 +64,7 @@ describe('EnergyService', () => {
   it('loads timeseries with interval and optional from/to params', () => {
     service.getTimeseries({ from: 'a', to: 'b' }).subscribe();
 
-    const request = httpMock.expectOne((req) => req.url === 'http://localhost:8000/api/customers/me/energy/timeseries');
+    const request = httpMock.expectOne((req) => req.url === `${API_BASE_URL}/api/customers/me/energy/timeseries`);
     expect(request.request.params.get('interval')).toBe('15m');
     expect(request.request.params.get('from')).toBe('a');
     expect(request.request.params.get('to')).toBe('b');
