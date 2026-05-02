@@ -74,10 +74,12 @@ describe('EnergyService', () => {
 
   it('returns expected period range for today', () => {
     const now = new Date('2026-05-02T10:20:30.000Z');
+    const expectedLocalMidnight = new Date(now);
+    expectedLocalMidnight.setHours(0, 0, 0, 0);
 
     const result = service.getPeriodRange('today', now);
 
-    expect(result.from).toBe('2026-05-02T00:00:00.000Z');
+    expect(result.from).toBe(expectedLocalMidnight.toISOString());
     expect(result.to).toBe('2026-05-02T10:20:30.000Z');
   });
 
